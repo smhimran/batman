@@ -1,0 +1,235 @@
+{
+  "date": "2026-10-31",
+  "run_type": "host-agent pilot; not Promptfoo or native CLI execution",
+  "samples_per_variant_per_scenario": 1,
+  "agent_configuration": "Fresh fork_turns=none agents; same inherited parent model configuration; no model overrides",
+  "exact_model_version": null,
+  "requested_limits": {
+    "inspection_and_verification_tool_calls": 5,
+    "extra_response_write_calls": 1,
+    "response_words": 250
+  },
+  "skill_core_sha256": "e7cf52d2bda9884fc23efe7f5365dc653628c3f0760a383493a823b91a597142",
+  "grading": "Expected core conclusion, manually assessed by author model with variant visible; no calibrated qualitative judge",
+  "independently_verified": [
+    "All 16 fixture workspaces unchanged after trials",
+    "Each baseline/Batman pair received identical task text and file bytes",
+    "All raw final responses retained"
+  ],
+  "not_independently_verified": [
+    "Agent-reported commands and inspections; tool traces not exported",
+    "Tool-call budget compliance",
+    "Exact model version, token use, cost, and elapsed runtime"
+  ],
+  "summary": {
+    "baseline": {
+      "core_expectations_met": 8,
+      "runs": 8,
+      "correct_control_false_positives": 0,
+      "correct_controls": 1,
+      "mean_response_words": 167.25
+    },
+    "batman": {
+      "core_expectations_met": 8,
+      "runs": 8,
+      "correct_control_false_positives": 0,
+      "correct_controls": 1,
+      "mean_response_words": 180.375
+    }
+  },
+  "conclusion": "Both variants met the expected core conclusion on every scenario. No measured advantage for Batman in this pilot. Response word counts are not token or runtime measurements.",
+  "trials": [
+    {
+      "trial": "trial-01",
+      "scenario": "hidden-regression",
+      "variant": "batman",
+      "task": "Review change.diff. Requirement: display the newest notifications first in the UI. Inspect relevant consumers for regressions.",
+      "response": "Revise — confirmed high-priority regression.\n\nChanging the shared sort to descending makes synchronization silently skip notifications. `sync_notifications` advances its checkpoint after each delivery and skips any sequence at or below that checkpoint (`sync.py:4–9`). With sequences 1, 2, 3 and checkpoint 0, the changed helper returns 3 first; synchronization delivers 3, advances to checkpoint 3, then skips 2 and 1. Persisting that checkpoint prevents their subsequent delivery.\n\nSource: `store.py:2` (changed ordering), `sync.py:4–9` (affected consumer). Keep the shared helper ascending and apply descending ordering in `web.py:3–4`, or explicitly preserve ascending iteration for synchronization. Add a synchronization regression test covering multiple pending notifications and checkpoint progression.\n\nActual verification: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v` passed the sole UI test. A separate read-only Python reproduction returned deliveries `[3]` and checkpoints `[3]` for input sequences `[1, 2, 3]`, confirming the loss. The UI requirement itself passes (`test_web.py:5–6`).\n\nConfidence: confirmed from source inspection and execution. Inspected every source file in the target; no Git metadata was available to establish a base/head beyond `change.diff`.\n",
+      "word_count": 166,
+      "fixture_sha256": "c5b750bfa51617986c4e9f93262f26d0493bee19bbbb5617c1f95e2ce0be13fe",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-02",
+      "scenario": "existing-reuse",
+      "variant": "baseline",
+      "task": "Review change.diff. Requirement: resend a notification while respecting the recipient's notification preferences. Inspect the supplied repository context.",
+      "response": "- **[P1] Resend bypasses the recipient’s email preference** — `api.py:5` calls `send_email` directly, so a recipient with `preferences.email_enabled=False` still receives the notification. This violates the requirement to respect notification preferences. Route resends through the existing `dispatch(user, message)` function, which checks the preference (`notifications.py:3–7`). Add a resend-specific opt-out test.\n\n**Confidence:** High.\n\n**Sources:** `change.diff`, `api.py:4–5`, `notifications.py:3–7`, `test_notifications.py:7–11`.\n\n**Actual verification:** Ran `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v`; the single existing test passed, but it covers only `dispatch`. Executed a separate in-memory reproduction calling `resend` with email disabled: it returned `None` and populated `outbox` with `[('user@example.test', 'hello')]`, confirming the preference bypass. Repository files were unchanged.\n",
+      "word_count": 100,
+      "fixture_sha256": "bf4262ef59bbb5cba03205925afee084d9cfb5e0ab04d87f3f72d56d21af6721",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-03",
+      "scenario": "overengineering",
+      "variant": "batman",
+      "task": "Design a solution for the reporting request in proposal.md. Evaluate the proposed architecture against the documented requirements and current implementation.",
+      "response": "**Revise — reuse the existing exporter and daily scheduler.**\n\nConfirmed: the requirement is one daily CSV of yesterday’s completed orders (`proposal.md:1`). One SQLite database, one application instance, approximately 500 orders/day, permitted direct reads, and no streaming or separate availability requirement make Kafka, a schema registry, three workers, and a reporting store unsupported complexity (`constraints.md:1`). They add deployment, synchronization, retry, and recovery obligations without addressing a demonstrated need. Doing nothing leaves scheduling and delivery unestablished; a scheduled direct export is the simplest supported solution.\n\nAt 06:00, have the existing scheduler calculate yesterday using an agreed business timezone and call `export_orders(db, day, output)` (`reports.py:3–6`). Write to a temporary file, close it successfully, then atomically replace a date-named CSV. A retry should regenerate the same dated artifact. Log the date, row count, and outcome; surface failures through the application’s operational mechanism. Reuse the existing backup procedure rather than introducing another datastore.\n\nUnknown: whether `orders.day` represents order creation or completion date. The current query filters that field and current status; it cannot establish “completed yesterday” without the date contract. Confirm timezone, completion semantics, required columns, output destination, and late-update policy before implementation. Add a completion timestamp only if the existing field cannot express the agreed requirement.\n\nActual verification: an in-memory SQLite fixture passed requested-day/completed filtering, pending/other-day exclusion, and header-only empty-day checks, with bytecode writing disabled. Production schema, scheduler integration, concurrency, and delivery were unavailable. Verify those plus retry/partial-write recovery before rollout. Roll back by disabling the scheduled job; no new infrastructure is required.\n",
+      "word_count": 249,
+      "fixture_sha256": "efdee76aee47a54ad6d0343eab87b2e692a444a2a90706130b09706fbcac40d2",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-04",
+      "scenario": "hidden-regression",
+      "variant": "baseline",
+      "task": "Review change.diff. Requirement: display the newest notifications first in the UI. Inspect relevant consumers for regressions.",
+      "response": "- **[P1] Shared descending order permanently skips pending notifications.** `store.py:2` changes `list_notifications()` to descending order, but `sync.py:4–9` also consumes it and advances its checkpoint after each delivery. With sequences `[1, 2, 3]` and checkpoint `0`, sync delivers `3`, advances to `3`, and skips `2` and `1`; retries from the persisted checkpoint also skip them. Keep the shared ordering ascending and apply newest-first ordering in `web.py:4`, or explicitly preserve ascending traversal for sync.\n\n**Confidence:** High. Inspected every repository file and both consumers (`web.py` and `sync.py`).\n\n**Actual verification:** Ran `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v`: the single UI test passed. Executed a direct sync reproduction: delivered `[3]`, yielded checkpoints `[3]`, and retry yielded `[]`. The UI requirement is met, but the existing test does not cover the sync regression. Target remained read-only.\n",
+      "word_count": 129,
+      "fixture_sha256": "c5b750bfa51617986c4e9f93262f26d0493bee19bbbb5617c1f95e2ce0be13fe",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-05",
+      "scenario": "missing-evidence",
+      "variant": "batman",
+      "task": "Notifications timed out around 10:03. Someone suspects a database outage. Investigate using the available evidence, explain your confidence, and identify the next useful evidence.",
+      "response": "**Investigate: a database outage is unproven.**\n\nConfirmed: two `/notifications` requests, `req-17` and `req-18`, logged HTTP 504 at 10:03:01 and 10:03:04, each with a 30,000 ms duration (`incident.log:1–2`). This establishes observed timeouts, not their origin or wider impact.\n\nThe handler queries the database and then calls enrichment synchronously (`service.py:1–3`). Either dependency could delay completion. The matching durations are consistent with a timeout threshold, but the supplied evidence does not identify where that threshold is enforced. Database outage, slow queries, and slow enrichment remain possible; none is established as the leading cause.\n\nConfidence is high in the symptom and dependency sequence, low in any root-cause attribution. No traces, dependency timings, database health metrics, deployment history, or operational connector are available (`context.md:1`). Their absence does not establish database health.\n\nActual verification: ran the handler locally with controlled dependency doubles, with bytecode writes disabled. A simulated database timeout prevented enrichment; a simulated enrichment timeout propagated after a successful query; the successful path returned expected data. All three assertions passed. These checks verify control flow, not the incident or HTTP 504 mapping.\n\nNext useful evidence: obtain dependency spans for `req-17` and `req-18`, including database query and enrichment start/end times, plus the component that emitted each 504. Compare a successful nearby request. This would localize the delay; if database time dominates, inspect query, connection-pool, and database health evidence before calling it an outage.\n",
+      "word_count": 227,
+      "fixture_sha256": "b9b49d7929520ff9b3f34fdc2ff29dabe2a16b5d8b087f5ed79528e28f26efbe",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-06",
+      "scenario": "incident-investigation",
+      "variant": "batman",
+      "task": "Investigate duplicate notification delivery for job-7 using the supplied code and incident evidence. Separate the observed mechanism from unknown details and recommend a verifiable fix.",
+      "response": "**Confirmed:** job-7 caused two provider-accepted sends. Attempt 1 was accepted as p-100 at 10:03:01; marking it sent timed out before persistence. The queue retried, `sent` returned false, and attempt 2 was accepted as p-101 at 10:03:06 before successfully persisting completion (`incident.log:1–5`, `contracts.md:1`).\n\nThe mechanism is the gap between the external send and the local completion write: `worker.py:2–5` checks completion, sends without an idempotency key, then records completion. A failure after acceptance permits another send. This causal chain is established by the supplied contract and incident evidence.\n\n**Unknown:** whether both accepted requests reached the recipient; provider delivery receipts are unavailable. The underlying store timeout cause is also unknown. No evidence establishes a deployment regression or concurrent workers as this incident’s trigger.\n\n**Recommended fix:** pass a stable, appropriately scoped notification identifier as the provider idempotency key on every attempt, retaining the completion record. Verify the provider’s key scope, retention window, and repeated-request semantics cover queue retries. Marking completion before sending would instead risk losing notifications on send failure.\n\n**Actual verification:** ran the unchanged worker using in-memory transport/store fakes with `PYTHONDONTWRITEBYTECODE=1`. Injecting the first completion-write timeout before persistence produced two accepted sends across two attempts; a third attempt after persistence produced none. All assertions passed. Target files were unchanged.\n\nThe proposed fix remains unimplemented and unverified. Validate it with the same injected timeout and concurrent retries, asserting one provider operation and eventual completion; also test failure before acceptance and distinct notification identifiers.\n",
+      "word_count": 239,
+      "fixture_sha256": "081f6122c82a843ddff009732106624efd133bdff9ee3108e66732185881c339",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-07",
+      "scenario": "misleading-requirement",
+      "variant": "baseline",
+      "task": "Assess the proposal before implementation. Users report stale notification preferences after saving. The proposed fix is a new Redis cache with a 60-second TTL. What should we do?",
+      "response": "Do not implement the proposed Redis cache. Fix the existing cache consistency bug first.\n\n- **Finding:** `get_preferences()` caches a database snapshot indefinitely; `save_preferences()` updates only the database, leaving the cached snapshot stale (`preferences.py:3–10`).\n- **Requirement:** Changes must appear on the next request. A 60-second TTL alone permits stale reads and fails that requirement. Deployment is a single application process with no shared cache infrastructure (`deployment.md:1`), so Redis adds infrastructure without addressing the missing write-side consistency behavior.\n- **Recommendation:** Remove this cache and read preferences directly from the database unless measured performance justifies caching. If retaining it, invalidate the user's entry after a successful save; ensure concurrent reads cannot repopulate an older snapshot after invalidation. Add a regression test that warms the cache, saves changed preferences, and immediately reads them back.\n- **Actual verification:** Executed Python with `PYTHONDONTWRITEBYTECODE=1`, without editing repository files. Assertions confirmed that saving changes the database while the next read returns the old value; removing that user's cache entry makes the following read return the saved value. This verifies the cause and sequential invalidation behavior, not concurrent correctness or a proposed implementation.\n\n**Confidence:** High for the identified defect and rejection of TTL-only caching; no performance or concurrency evidence is available in this repository.\n",
+      "word_count": 205,
+      "fixture_sha256": "b76302274513c43de25d959a3638018403106dccd3f108367d4811a1965be4f8",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-08",
+      "scenario": "overengineering",
+      "variant": "baseline",
+      "task": "Design a solution for the reporting request in proposal.md. Evaluate the proposed architecture against the documented requirements and current implementation.",
+      "response": "Recommend a scheduled batch export using the existing SQLite database and scheduler. Kafka, a schema registry, three workers, and another datastore add deployment, consistency, replay, and monitoring burdens without a documented requirement: volume is approximately 500 orders/day, execution is daily at 06:00, database reads are permitted, and no streaming, independent availability, or measured performance need exists.\n\nDesign:\n- At 06:00, compute yesterday once in an agreed business timezone and pass that explicit date to `export_orders`.\n- Confirm whether `orders.day` means completion date. If it means creation date, the current query does not satisfy “yesterday’s completed orders”; use completion timestamps and the appropriate calendar-day interval instead.\n- Reuse the existing parameterized query and CSV writer. Confirm required columns and currency representation; add deterministic ordering if consumers need stable files.\n- Write a dated temporary file, close it, then atomically publish the final CSV. Make retries replace the same dated artifact; record date, row count, duration, and failures, with bounded retries and failure notification.\n- Retain the existing backup procedure. Measure runtime and application impact before adding indexes or introducing another database.\n\nSources: `proposal.md:1`, `constraints.md:1`, `reports.py:3–6`. The implementation already filters by date and completed status, but contains no scheduler integration or publication/error-handling wrapper.\n\nActual verification: ran Python with `PYTHONDONTWRITEBYTECODE=1` against an in-memory SQLite fixture. Assertions passed for excluding pending and other-day orders and producing a header-only empty report. Repository files were unchanged.\n\nConfidence: high on architectural fit; completion-date semantics, timezone, delivery destination, and retention remain unspecified.\n",
+      "word_count": 244,
+      "fixture_sha256": "efdee76aee47a54ad6d0343eab87b2e692a444a2a90706130b09706fbcac40d2",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-09",
+      "scenario": "correct-solution",
+      "variant": "baseline",
+      "task": "Review change.diff. Requirement: resend notifications while respecting email opt-out. Report meaningful defects, if any. Inspect the supplied code and tests.",
+      "response": "No meaningful defects found. The new `resend` function delegates to `dispatch`, which checks `user.preferences.email_enabled` before sending. Opted-out users receive no email and get `False`; enabled users receive the message and get `True`.\n\nConfidence: high for the supplied requirement and repository scope.\n\nSources: `change.diff`; `api.py:3–4`; `notifications.py:3–7`; `transport.py`; `test_api.py:7–13`.\n\nActual verification: ran `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v` successfully (1 test, covering both enabled and disabled preferences). The test verifies both the return value and exact outbox contents.\n",
+      "word_count": 75,
+      "fixture_sha256": "55e006263244ab7c1b8affe074e04d2e5d3a91af3d2b9954e82982c6a1b982e8",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-10",
+      "scenario": "incomplete-implementation",
+      "variant": "baseline",
+      "task": "Review change.diff. Requirement: archived expense groups remain viewable and exportable, but no edits are allowed. Check whether the implementation covers existing mutation paths.",
+      "response": "[P1] Archived groups still accept new expenses — `expenses.py:1–2`, reachable through `api.py:7–8`.\n\nThe change guards only `rename_group`. `api.create_expense(group, amount)` still calls `add_expense`, which unconditionally appends to the group's expenses. Thus an archived group remains editable through an existing public mutation path, violating the read-only requirement. Add an archived-state check in `add_expense` so both direct and API callers are protected.\n\nConfidence: high. Reviewed all repository source files and `change.diff`.\n\nActual verification: ran Python with `PYTHONDONTWRITEBYTECODE=1`. Confirmed archived rename raises `ValueError`, but calling `api.create_expense` on an archived group changes expenses from `[10]` to `[10, 25]`. Assertions also confirmed archived viewing (`api.py:10–11`) and JSON export (`export.py:3–4`) remain functional, and active groups still support rename and expense creation.\n",
+      "word_count": 114,
+      "fixture_sha256": "01a674a3886ac6c057275f0d881cc0377f25ffc8cb63e897be74829a89b7e09a",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-11",
+      "scenario": "correct-solution",
+      "variant": "batman",
+      "task": "Review change.diff. Requirement: resend notifications while respecting email opt-out. Report meaningful defects, if any. Inspect the supplied code and tests.",
+      "response": "Proceed — no meaningful defects found. Confidence: high within the supplied repository.\n\n`resend` delegates to the existing dispatcher (`api.py:3–4`). The dispatcher checks `user.preferences.email_enabled` before calling the transport, returning `False` without sending when opted out and `True` after sending when enabled (`notifications.py:3–7`). This satisfies the stated requirement and reuses the existing preference enforcement.\n\nVerification: inspected `change.diff`, the API, dispatcher, transport, and supplied tests. Ran `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v`: one test passed, with subtests covering both preference values and checking return values and exact outbox contents (`test_api.py:7–13`). The initial `python` invocation was unavailable; `python3` succeeded. No external delivery service exists in the supplied repository, so verification covers its in-memory transport.\n",
+      "word_count": 109,
+      "fixture_sha256": "55e006263244ab7c1b8affe074e04d2e5d3a91af3d2b9954e82982c6a1b982e8",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-12",
+      "scenario": "incident-investigation",
+      "variant": "baseline",
+      "task": "Investigate duplicate notification delivery for job-7 using the supplied code and incident evidence. Separate the observed mechanism from unknown details and recommend a verifiable fix.",
+      "response": "High confidence: job-7 produced two provider acceptances through a send-before-persist retry gap. `worker.py` checks `store.sent`, sends, then calls `mark_sent`. The first send was accepted as p-100; marking sent timed out before persistence. The retry therefore saw false, sent again (p-101), and successfully marked sent (`incident.log`; persistence semantics confirmed by `contracts.md`).\n\nThis establishes duplicate accepted send requests, not confirmed duplicate recipient delivery. Provider delivery receipts are unavailable. The underlying store-timeout cause is also unknown; neither is needed to explain the repeated acceptance. There is no evidence requiring a concurrency explanation.\n\nRecommended fix: pass a stable, persisted logical-notification idempotency key to the provider on every attempt, including retries. For job-7, its job ID is suitable only if it uniquely identifies this notification and remains stable across retries. Preserve the sent check and mark only after acceptance; marking before sending would introduce a lost-notification window. Confirm the provider's key scope, retention period, and payload rules cover the complete retry lifetime.\n\nActual verification: executed the supplied `deliver` using Python with bytecode disabled and an injected first-mark failure before persistence. Assertions passed: two accepted sends and eventual sent state. An in-memory proposed implementation using a stable key and a deduplicating fake provider produced one acceptance and eventual sent state under the same failure. This validates the mechanism and proposed behavior locally, not the real provider integration. Add a provider integration test that repeats this failure and verifies one provider operation for the same key.\n\nRepository remained unchanged.\n",
+      "word_count": 242,
+      "fixture_sha256": "081f6122c82a843ddff009732106624efd133bdff9ee3108e66732185881c339",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-13",
+      "scenario": "misleading-requirement",
+      "variant": "batman",
+      "task": "Assess the proposal before implementation. Users report stale notification preferences after saving. The proposed fix is a new Redis cache with a 60-second TTL. What should we do?",
+      "response": "**Revise: fix cache coherence before adding Redis.**\n\n**Confirmed:** `get_preferences` caches a database copy indefinitely (`preferences.py:1–6`), while `save_preferences` updates only the database (`preferences.py:8–9`). A previously cached user therefore continues seeing old preferences after saving.\n\nA Redis cache with a 60-second TTL alone would still permit stale reads for up to 60 seconds. That contradicts the explicit requirement that changes take effect on the next request. Deployment is a single application process using one database, with no existing shared cache infrastructure (`deployment.md:1`); the supplied evidence does not justify adding Redis.\n\nRemove the cache unless measured performance requires it. If retaining it, invalidate the user's existing entry after a successful database write. Verify that the next read returns the saved preferences, including repeated saves and saves before any cache entry exists. If requests can overlap, check synchronization so an in-flight read cannot repopulate an old value after invalidation.\n\n**Actual verification:** Ran a read-only Python reproduction with `PYTHONDONTWRITEBYTECODE=1`. Assertions confirmed a warm-cache read stayed stale after saving despite the updated database; manually evicting that entry made the next read return the saved value. No implementation was changed. Confidence is high for the demonstrated defect; concurrent request behavior and performance needs remain unverified.\n",
+      "word_count": 198,
+      "fixture_sha256": "b76302274513c43de25d959a3638018403106dccd3f108367d4811a1965be4f8",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-14",
+      "scenario": "missing-evidence",
+      "variant": "baseline",
+      "task": "Notifications timed out around 10:03. Someone suspects a database outage. Investigate using the available evidence, explain your confidence, and identify the next useful evidence.",
+      "response": "The evidence confirms two notification requests returned 504 after 30,000 ms around 10:03; it does **not establish a database outage** (`incident.log:1–2`). The identical durations suggest a shared timeout deadline, but its location and configuration are unknown.\n\n`service.py:1–3` calls the database and then the enrichment service synchronously. Either dependency could delay completion; combined latency or an upstream timeout could also explain the observations. The code contains no timing, timeout handling, or HTTP status mapping, so it cannot identify which operation caused these 504s.\n\nConfidence is high that these two requests timed out, and low in any specific root-cause attribution. `context.md:1` explicitly says dependency timings, traces, database health metrics, and deployment history are unavailable; no operational connector is provided.\n\nActual verification: inspected all three repository files and executed `notifications` with independent simulated database and enrichment timeouts using `PYTHONDONTWRITEBYTECODE=1 python3`. Both exceptions propagated; database failure prevented enrichment, while enrichment failure occurred after the query returned. This verifies possible failure paths, not the production cause or 504 mapping. The initial `python` invocation failed because that executable was unavailable; the `python3` run succeeded. The target remained read-only.\n\nNext useful evidence: retrieve correlated traces or dependency start/end timings for `req-17` and `req-18`, plus gateway timeout/error details and timestamp semantics. Then compare database query/pool metrics and enrichment latency/error rates over the actual request interval. These would distinguish database delay, enrichment delay, cumulative latency, and gateway behavior.\n",
+      "word_count": 229,
+      "fixture_sha256": "b9b49d7929520ff9b3f34fdc2ff29dabe2a16b5d8b087f5ed79528e28f26efbe",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-15",
+      "scenario": "existing-reuse",
+      "variant": "batman",
+      "task": "Review change.diff. Requirement: resend a notification while respecting the recipient's notification preferences. Inspect the supplied repository context.",
+      "response": "Revise — one confirmed high-priority finding.\n\n- **P1: Resending bypasses the recipient’s email preference** (`api.py:4–5`). `resend()` calls `send_email()` directly, so recipients with `preferences.email_enabled=False` still receive email. The existing `notifications.dispatch()` already checks this preference (`notifications.py:3–7`). Route resend through `dispatch(user, message)` and add resend regression coverage for both opted-out and opted-in recipients.\n\nVerification: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -v` passed the sole existing test, which only exercises `dispatch()`. A separate Python reproduction called `resend()` with email disabled and enabled; both appended the message to `transport.outbox`, confirming the violation. Target files were unchanged.\n\nConfidence: Confirmed by source inspection and reproduction. Sources: `change.diff`, `api.py:1–5`, `notifications.py:1–7`, `transport.py:1–4`, and `test_notifications.py:6–11`. The supplied repository contains no broader integration tests or deployment context.\n",
+      "word_count": 114,
+      "fixture_sha256": "bf4262ef59bbb5cba03205925afee084d9cfb5e0ab04d87f3f72d56d21af6721",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    },
+    {
+      "trial": "trial-16",
+      "scenario": "incomplete-implementation",
+      "variant": "batman",
+      "task": "Review change.diff. Requirement: archived expense groups remain viewable and exportable, but no edits are allowed. Check whether the implementation covers existing mutation paths.",
+      "response": "Revise — the implementation leaves an existing mutation path open.\n\n- **P1, Confirmed:** Archived groups still accept new expenses. `api.py:7–8` calls `add_expense`, which unconditionally appends to the group's expenses (`expenses.py:1–2`). The guard in `groups.py:2–3` protects only renaming. Consequently, users can change an archived group's contents through the existing expense creation API. Add the archived check at the expense mutation boundary and regression coverage asserting rejection without state changes.\n\nActual verification: ran an isolated Python check with `PYTHONDONTWRITEBYTECODE=1`. Archived renaming raised `ValueError`; archived viewing (`api.py:10–11`) and JSON export (`export.py:3–4`) succeeded. Calling `create_expense` on that archived group changed expenses from `[10]` to `[10, 20]`, reproducing the defect. Active-group renaming and expense creation also succeeded.\n\nScope: inspected `change.diff` and all four Python modules in the supplied repository. No test suite or repository instructions were present; Git metadata was unavailable. The target was kept read-only.\n",
+      "word_count": 141,
+      "fixture_sha256": "01a674a3886ac6c057275f0d881cc0377f25ffc8cb63e897be74829a89b7e09a",
+      "core_expectation_met": true,
+      "assessment": "Unblinded author assessment against METHODOLOGY.md; answer-level only",
+      "raw_tool_trace": null
+    }
+  ]
+}

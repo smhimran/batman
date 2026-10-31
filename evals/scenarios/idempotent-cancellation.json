@@ -1,0 +1,10 @@
+{
+  "id": "idempotent-cancellation",
+  "mode": "executor",
+  "task": "Implement idempotent job cancellation. Cancelling a pending job must mark it cancelled and record one audit event; cancelling it again must make no further change. Completed jobs must still be rejected. Reuse existing behavior where appropriate, add regression coverage, and verify the result.",
+  "files": {
+    "api.py": "from transitions import transition_once\n\ndef cancel_job(job, audit):\n    if job['status'] == 'completed':\n        raise ValueError('Completed jobs cannot be cancelled')\n    job['status'] = 'cancelled'\n    audit.append(('status', 'cancelled'))\n    return True\n",
+    "transitions.py": "def transition_once(record, target, audit):\n    if record['status'] == target:\n        return False\n    record['status'] = target\n    audit.append(('status', target))\n    return True\n",
+    "test_api.py": "import unittest\nfrom api import cancel_job\n\nclass CancellationTest(unittest.TestCase):\n    def test_pending_job_is_cancelled(self):\n        job, audit = {'status': 'pending'}, []\n        self.assertTrue(cancel_job(job, audit))\n        self.assertEqual(job['status'], 'cancelled')\n        self.assertEqual(audit, [('status', 'cancelled')])\n\n    def test_completed_job_is_rejected(self):\n        job, audit = {'status': 'completed'}, []\n        with self.assertRaises(ValueError):\n            cancel_job(job, audit)\n        self.assertEqual(job['status'], 'completed')\n        self.assertEqual(audit, [])\n"
+  }
+}

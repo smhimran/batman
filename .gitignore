@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.promptfoo/
+evals/results/
+.agents/skills/batman/
+.claude/skills/batman/

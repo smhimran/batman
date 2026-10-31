@@ -1,0 +1,64 @@
+description: Batman versus baseline on identical repository snapshots
+prompts:
+  - id: file://prompts.cjs:baseline
+    label: baseline
+  - id: file://prompts.cjs:batman
+    label: batman
+# Example provider; replace with the same chosen provider for both prompts.
+providers:
+  - openai:gpt-4.1-mini
+tests:
+  - description: Existing dispatcher and opt-out behavior
+    vars:
+      scenario: existing-reuse
+    assert:
+      - type: icontains
+        value: dispatch
+  - description: Unchanged sync consumer of ordering contract
+    vars:
+      scenario: hidden-regression
+    assert:
+      - type: icontains
+        value: checkpoint
+  - description: Cache proposal versus immediate consistency
+    vars:
+      scenario: misleading-requirement
+    assert:
+      - type: icontains
+        value: cache
+  - description: Timeout with missing dependency evidence
+    vars:
+      scenario: missing-evidence
+    assert:
+      - type: icontains
+        value: enrich
+  - description: Correct solution control — avoid manufactured findings
+    vars:
+      scenario: correct-solution
+    assert:
+      - type: icontains
+        value: dispatch
+  - description: Archived group mutation outside the diff
+    vars:
+      scenario: incomplete-implementation
+    assert:
+      - type: icontains
+        value: add_expense
+  - description: Daily report without streaming infrastructure
+    vars:
+      scenario: overengineering
+    assert:
+      - type: icontains
+        value: export_orders
+  - description: Accepted send followed by persistence failure and retry
+    vars:
+      scenario: incident-investigation
+    assert:
+      - type: icontains
+        value: idempotency
+  - description: Idempotent cancellation implementation
+    vars:
+      scenario: idempotent-cancellation
+    assert:
+      - type: icontains
+        value: transition_once

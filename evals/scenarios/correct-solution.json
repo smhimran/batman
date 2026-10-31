@@ -1,0 +1,12 @@
+{
+  "id": "correct-solution",
+  "mode": "guardian",
+  "task": "Review change.diff. Requirement: resend notifications while respecting email opt-out. Report meaningful defects, if any. Inspect the supplied code and tests.",
+  "files": {
+    "change.diff": "--- a/api.py\n+++ b/api.py\n@@ -1 +1,4 @@\n from notifications import dispatch\n+\n+def resend(user, message):\n+    return dispatch(user, message)\n",
+    "api.py": "from notifications import dispatch\n\ndef resend(user, message):\n    return dispatch(user, message)\n",
+    "notifications.py": "from transport import send_email\n\ndef dispatch(user, message):\n    if not user.preferences.email_enabled:\n        return False\n    send_email(user.email, message)\n    return True\n",
+    "transport.py": "outbox = []\n\ndef send_email(address, message):\n    outbox.append((address, message))\n",
+    "test_api.py": "import unittest\nfrom types import SimpleNamespace\nfrom api import resend\nfrom transport import outbox\n\nclass ResendTest(unittest.TestCase):\n    def test_preferences(self):\n        for enabled in [False, True]:\n            with self.subTest(enabled=enabled):\n                outbox.clear()\n                user = SimpleNamespace(email='a@example.test', preferences=SimpleNamespace(email_enabled=enabled))\n                self.assertEqual(resend(user, 'hello'), enabled)\n                self.assertEqual(outbox, [('a@example.test', 'hello')] if enabled else [])\n"
+  }
+}

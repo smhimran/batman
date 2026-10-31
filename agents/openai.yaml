@@ -1,0 +1,4 @@
+interface:
+  display_name: "Batman"
+  short_description: "Investigate, challenge, review, and verify changes"
+  default_prompt: "Use $batman to investigate this task, inspect relevant context, and recommend or implement the simplest verified solution."

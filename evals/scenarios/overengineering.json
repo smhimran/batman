@@ -1,0 +1,10 @@
+{
+  "id": "overengineering",
+  "mode": "strategist",
+  "task": "Design a solution for the reporting request in proposal.md. Evaluate the proposed architecture against the documented requirements and current implementation.",
+  "files": {
+    "proposal.md": "The owner wants a daily CSV of yesterday's completed orders. Proposed approach: add Kafka, an event schema registry, and three always-on workers to populate a new reporting store. Recommend a practical design before implementation.\n",
+    "constraints.md": "One SQLite database, one application instance, about 500 orders/day. A daily scheduler and backup procedure already exist. The report runs once at 06:00; no live dashboard, streaming, or separate availability requirement. The export may read the application database. No measured performance problem exists.\n",
+    "reports.py": "import csv\n\ndef export_orders(db, day, output):\n    writer = csv.writer(output)\n    writer.writerow(['id', 'total'])\n    writer.writerows(db.execute('SELECT id, total FROM orders WHERE day = ? AND status = ?', (day, 'completed')))\n"
+  }
+}

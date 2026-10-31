@@ -1,0 +1,9 @@
+{
+  "id": "misleading-requirement",
+  "mode": "challenger",
+  "task": "Assess the proposal before implementation. Users report stale notification preferences after saving. The proposed fix is a new Redis cache with a 60-second TTL. What should we do?",
+  "files": {
+    "preferences.py": "cache = {}\n\ndef get_preferences(db, user_id):\n    if user_id not in cache:\n        cache[user_id] = db[user_id].copy()\n    return cache[user_id].copy()\n\ndef save_preferences(db, user_id, preferences):\n    db[user_id] = preferences.copy()\n",
+    "deployment.md": "Single application process. Reads and writes use the same database. Preference changes must take effect on the next request. No shared cache infrastructure exists.\n"
+  }
+}

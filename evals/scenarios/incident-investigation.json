@@ -1,0 +1,10 @@
+{
+  "id": "incident-investigation",
+  "mode": "detective",
+  "task": "Investigate duplicate notification delivery for job-7 using the supplied code and incident evidence. Separate the observed mechanism from unknown details and recommend a verifiable fix.",
+  "files": {
+    "worker.py": "def deliver(job, transport, store):\n    if store.sent(job['id']):\n        return\n    transport.send(job['recipient'], job['message'])\n    store.mark_sent(job['id'])\n",
+    "incident.log": "10:03:01 job=job-7 attempt=1 transport=accepted provider_id=p-100\n10:03:02 job=job-7 attempt=1 mark_sent=timeout\n10:03:05 job=job-7 attempt=2 sent=false\n10:03:06 job=job-7 attempt=2 transport=accepted provider_id=p-101\n10:03:07 job=job-7 attempt=2 mark_sent=success\n",
+    "contracts.md": "The queue retries a failed job. In this incident the first mark_sent failed before persisting; store.sent returned false on retry. Transport acceptance means the provider accepted a send. The provider supports idempotency keys, but worker.py does not pass one. Provider delivery receipts and the underlying cause of the store timeout are unavailable.\n"
+  }
+}

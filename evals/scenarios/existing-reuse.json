@@ -1,0 +1,12 @@
+{
+  "id": "existing-reuse",
+  "mode": "guardian",
+  "task": "Review change.diff. Requirement: resend a notification while respecting the recipient's notification preferences. Inspect the supplied repository context.",
+  "files": {
+    "change.diff": "--- a/api.py\n+++ b/api.py\n@@ -1 +1,5 @@\n from notifications import dispatch\n+from transport import send_email\n+\n+def resend(user, message):\n+    send_email(user.email, message)\n",
+    "api.py": "from notifications import dispatch\nfrom transport import send_email\n\ndef resend(user, message):\n    send_email(user.email, message)\n",
+    "notifications.py": "from transport import send_email\n\ndef dispatch(user, message):\n    if not user.preferences.email_enabled:\n        return False\n    send_email(user.email, message)\n    return True\n",
+    "transport.py": "outbox = []\n\ndef send_email(address, message):\n    outbox.append((address, message))\n",
+    "test_notifications.py": "import unittest\nfrom types import SimpleNamespace\nfrom notifications import dispatch\nfrom transport import outbox\n\nclass PreferencesTest(unittest.TestCase):\n    def test_opt_out(self):\n        outbox.clear()\n        user = SimpleNamespace(email='user@example.test', preferences=SimpleNamespace(email_enabled=False))\n        self.assertFalse(dispatch(user, 'hello'))\n        self.assertEqual(outbox, [])\n"
+  }
+}

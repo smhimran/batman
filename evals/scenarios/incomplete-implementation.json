@@ -1,0 +1,12 @@
+{
+  "id": "incomplete-implementation",
+  "mode": "guardian",
+  "task": "Review change.diff. Requirement: archived expense groups remain viewable and exportable, but no edits are allowed. Check whether the implementation covers existing mutation paths.",
+  "files": {
+    "change.diff": "--- a/groups.py\n+++ b/groups.py\n@@ -1,2 +1,4 @@\n def rename_group(group, name):\n+    if group['archived']:\n+        raise ValueError('Archived group is read-only')\n     group['name'] = name\n",
+    "groups.py": "def rename_group(group, name):\n    if group['archived']:\n        raise ValueError('Archived group is read-only')\n    group['name'] = name\n",
+    "expenses.py": "def add_expense(group, amount):\n    group['expenses'].append(amount)\n",
+    "api.py": "from groups import rename_group\nfrom expenses import add_expense\n\ndef rename(group, name):\n    rename_group(group, name)\n\ndef create_expense(group, amount):\n    add_expense(group, amount)\n\ndef view(group):\n    return {'name': group['name'], 'expenses': list(group['expenses'])}\n",
+    "export.py": "import json\n\ndef export_group(group):\n    return json.dumps(group)\n"
+  }
+}

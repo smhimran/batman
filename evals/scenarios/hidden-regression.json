@@ -1,0 +1,12 @@
+{
+  "id": "hidden-regression",
+  "mode": "guardian",
+  "task": "Review change.diff. Requirement: display the newest notifications first in the UI. Inspect relevant consumers for regressions.",
+  "files": {
+    "change.diff": "--- a/store.py\n+++ b/store.py\n@@ -1,2 +1,2 @@\n def list_notifications(rows):\n-    return sorted(rows, key=lambda row: row['sequence'])\n+    return sorted(rows, key=lambda row: row['sequence'], reverse=True)\n",
+    "store.py": "def list_notifications(rows):\n    return sorted(rows, key=lambda row: row['sequence'], reverse=True)\n",
+    "web.py": "from store import list_notifications\n\ndef notification_page(rows):\n    return list_notifications(rows)\n",
+    "sync.py": "from store import list_notifications\n\ndef sync_notifications(rows, checkpoint, deliver):\n    for row in list_notifications(rows):\n        if row['sequence'] <= checkpoint:\n            continue\n        deliver(row)  # May raise. Caller persists the last yielded checkpoint.\n        checkpoint = row['sequence']\n        yield checkpoint\n",
+    "test_web.py": "import unittest\nfrom web import notification_page\n\nclass WebTest(unittest.TestCase):\n    def test_newest_first(self):\n        self.assertEqual([r['sequence'] for r in notification_page([{'sequence': 1}, {'sequence': 2}])], [2, 1])\n"
+  }
+}
