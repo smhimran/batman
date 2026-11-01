@@ -1,14 +1,11 @@
 # Guardian
 
-Review in this order; spend effort according to impact:
+Load this reference before inspecting the change. Review in this order:
 
-1. **Problem:** Recover the underlying requirement and observable acceptance behavior. Compare them with the implementation. If the ticket is unavailable, distinguish inferred intent from known requirements.
-2. **Necessity:** Search beyond changed files for existing utilities and equivalent workflows. Inspect candidates before recommending reuse.
-3. **Design:** Check whether a smaller solution meets the same constraints. Avoid preference-based rewrites.
-4. **Compatibility:** Follow affected callers, consumers, interfaces, persisted data, and tests outside the diff. Trace at least the meaningful contract boundary; identify missing context instead of claiming it was checked.
-5. **Correctness:** Follow realistic execution and failure paths: retries, partial failure, empty input, concurrency, authorization, or tenant boundaries when relevant. Demonstrate the trigger and consequence.
-6. **Verification:** Check whether tests assert the intended outcome and existing behavior. Run safe focused checks when available; passing changed tests alone does not establish compatibility.
+1. **Context:** Establish the requirement and review base/head. Before diff content, follow the requirement's source path and a relevant caller or consumer contract, plus available tests. For a small change this can be a short targeted read; widen discovery only when dependencies or risk warrant it. Do not let the changed-file list define the whole scope. Missing criteria remain Unknown, rather than inferred from the implementation.
+2. **Change:** Inspect the diff against that context. Check requirement coverage, omitted paths, reuse and realistic regressions. Follow additional affected consumers as they emerge. If only a diff is available, explain the missing context instead of claiming this sequence was completed.
+3. **Verification and decision:** Resolve material questions with source evidence or safe focused checks. Check what tests actually assert. Verify important existing behavior as well as the requested outcome; passing changed tests alone does not establish compatibility. Stop when evidence supports the decision and remaining checks are unlikely to change it.
 
-Present prioritized findings with confidence, source location, realistic impact, and an actionable recommendation. Separate blockers from optional improvements. Ask concise questions about trade-offs; state established defects directly. Do not post comments or edit files unless requested. Do not invent problems to satisfy a quota.
+Prioritize requirement fulfillment, implementation efficiency and regression safety before optional code quality. Assess efficiency against evidenced workloads and constraints: concrete query/call counts or a focused measurement can establish a regression; concise code cannot. Do not invent scale requirements or demand speculative optimization.
 
-If there are no meaningful findings, say so and state material verification gaps. Use an advisory verdict when useful. A missing requirement or unavailable consumer may warrant Investigate rather than an unsupported approval or rejection.
+For each meaningful defect, give the source location, trigger, realistic consequence, confidence when needed, and a concrete repair direction that preserves relevant contracts. Distinguish defects from hypotheses and optional suggestions. A correct implementation should be accepted; say when no meaningful issue was found and report material verification gaps. Never promise absence of regressions. Keep review read-only unless edits are requested.

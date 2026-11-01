@@ -1,0 +1,18 @@
+{
+  "dev-batch-auth": {
+    "origin": "Newly constructed author-created synthetic task; not independently sourced",
+    "split": "development"
+  },
+  "dev-health-context": {
+    "origin": "Newly constructed author-created synthetic task; not independently sourced",
+    "split": "development"
+  },
+  "heldout-empty-cache": {
+    "origin": "Newly constructed author-created synthetic task; not independently sourced",
+    "split": "heldout"
+  },
+  "heldout-refund-retry": {
+    "origin": "Newly constructed author-created synthetic task; not independently sourced",
+    "split": "heldout"
+  }
+}

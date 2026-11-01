@@ -1,0 +1,11 @@
+{
+  "id": "dev-batch-auth",
+  "mode": "guardian",
+  "task": "Review the candidate change for the requirement that bulk document reads return only documents owned by the requesting user. Assess actual behavior and compatibility.",
+  "files": {
+    "requirements.md": "Bulk document reads must enforce the same ownership boundary as read_one. Missing and foreign documents are omitted.\n",
+    "access.py": "def owned(doc, user):\n    return doc[\"owner\"] == user\n\ndef read_one(docs, key, user):\n    doc = docs[key]\n    if not owned(doc, user):\n        raise PermissionError(key)\n    return doc\n",
+    "bulk.py": "def read_many(docs, keys, user):\n    return [docs[k] for k in keys if k in docs]\n",
+    "change.diff": "--- a/bulk.py\n+++ b/bulk.py\n@@ -1,2 +1,2 @@\n def read_many(docs, keys, user):\n-    raise NotImplementedError\n+    return [docs[k] for k in keys if k in docs]\n"
+  }
+}

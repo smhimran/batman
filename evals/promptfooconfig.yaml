@@ -6,7 +6,10 @@ prompts:
     label: batman
 # Example provider; replace with the same chosen provider for both prompts.
 providers:
-  - openai:gpt-4.1-mini
+  - id: openai:codex-sdk
+    config:
+      sandbox_mode: read-only
+      persist_threads: false
 tests:
   - description: Existing dispatcher and opt-out behavior
     vars:
@@ -62,3 +65,9 @@ tests:
     assert:
       - type: icontains
         value: transition_once
+  - description: Export results preserved but database round trips regress
+    vars:
+      scenario: export-query-regression
+    assert:
+      - type: icontains
+        value: query

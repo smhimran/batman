@@ -73,6 +73,28 @@ for fail, expected in [(True, 'db'), (False, 'enrich')]:
     else: raise AssertionError('expected timeout')
 ''')
 
+    def test_export_preserves_rows_but_regresses_query_count(self):
+        self.run_fixture('export-query-regression', """
+import sqlite3
+from reports import export_orders
+from scheduler import daily_report
+db = sqlite3.connect(':memory:')
+db.execute('CREATE TABLE orders (id INTEGER PRIMARY KEY, total INTEGER)')
+queries = []
+db.set_trace_callback(queries.append)
+assert export_orders(db) == []
+assert len(queries) == 1
+db.executemany('INSERT INTO orders VALUES (?, ?)', [(3, 90), (1, 30), (2, 60)])
+queries.clear()
+rows = []
+daily_report(db, rows.append)
+assert rows == [(1, 30), (2, 60), (3, 90)]
+assert len(queries) == 4, queries
+queries.clear()
+assert db.execute('SELECT id, total FROM orders ORDER BY id').fetchall() == rows
+assert len(queries) == 1, queries
+""")
+
     def test_skill_references_resolve(self):
         text = (ROOT / 'SKILL.md').read_text()
         self.assertTrue(text.startswith('---\nname: batman\ndescription: '))
@@ -82,7 +104,7 @@ for fail, expected in [(True, 'db'), (False, 'enrich')]:
 
     def test_fixture_paths_stay_inside_workspace(self):
         paths = list((ROOT / 'evals/scenarios').glob('*.json'))
-        self.assertEqual(len(paths), 9)
+        self.assertEqual(len(paths), 10)
         for path in paths:
             data = json.loads(path.read_text())
             self.assertTrue((ROOT / 'references' / f"{data['mode']}.md").is_file())
@@ -91,7 +113,7 @@ for fail, expected in [(True, 'db'), (False, 'enrich')]:
                 self.assertNotIn('..', Path(name).parts)
 
     def test_review_diffs_match_supplied_post_change_files(self):
-        for name in ['existing-reuse', 'hidden-regression', 'correct-solution', 'incomplete-implementation']:
+        for name in ['existing-reuse', 'hidden-regression', 'correct-solution', 'incomplete-implementation', 'export-query-regression']:
             self.run_fixture(name, '''
 import subprocess
 result = subprocess.run(['git', 'apply', '--reverse', '--check', 'change.diff'], capture_output=True, text=True)

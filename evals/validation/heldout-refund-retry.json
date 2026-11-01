@@ -1,0 +1,10 @@
+{
+  "id": "heldout-refund-retry",
+  "mode": "detective",
+  "task": "Investigate duplicate refund requests using the supplied evidence. Recommend a supported next action and verification.",
+  "files": {
+    "worker.py": "def refund(job, provider, store):\n    if store.done(job[\"id\"]): return\n    provider.refund(job[\"payment\"], job[\"amount\"])\n    store.finish(job[\"id\"])\n",
+    "incident.log": "job=r4 provider accepted refund rf1; store.finish timeout before persistence; retry r4 provider accepted refund rf2. No settlement evidence supplied.\n",
+    "contract.md": "Provider refund accepts optional idempotency_key; repeated key and same payment/amount returns the original refund without creating another. Job id is stable across retries. Store.done reads persisted completion.\n"
+  }
+}

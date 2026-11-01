@@ -1,0 +1,12 @@
+{
+  "id": "export-query-regression",
+  "mode": "guardian",
+  "task": "Review the order export change against requirements.md. The author says the refactor preserves behavior and is efficient. Verify those claims.",
+  "files": {
+    "requirements.md": "Export every order as (id, total), ordered by id, including an empty result for no orders. Keep the existing single SELECT per export: the scheduled report runs against a remote database where round trips are expensive. No maximum order count or latency target has been established.\n",
+    "reports.py": "def export_orders(db):\n    ids = db.execute('SELECT id FROM orders ORDER BY id').fetchall()\n    return [(identifier, db.execute('SELECT total FROM orders WHERE id = ?', (identifier,)).fetchone()[0])\n            for (identifier,) in ids]\n",
+    "scheduler.py": "from reports import export_orders\n\ndef daily_report(db, write):\n    for row in export_orders(db):\n        write(row)\n",
+    "change.diff": "--- a/reports.py\n+++ b/reports.py\n@@ -1,2 +1,4 @@\n def export_orders(db):\n-    return db.execute('SELECT id, total FROM orders ORDER BY id').fetchall()\n+    ids = db.execute('SELECT id FROM orders ORDER BY id').fetchall()\n+    return [(identifier, db.execute('SELECT total FROM orders WHERE id = ?', (identifier,)).fetchone()[0])\n+            for (identifier,) in ids]\n",
+    "test_reports.py": "import sqlite3\nimport unittest\nfrom reports import export_orders\n\nclass ReportTest(unittest.TestCase):\n    def test_ordered_export(self):\n        db = sqlite3.connect(':memory:')\n        db.execute('CREATE TABLE orders (id INTEGER PRIMARY KEY, total INTEGER)')\n        db.executemany('INSERT INTO orders VALUES (?, ?)', [(2, 90), (1, 30)])\n        self.assertEqual(export_orders(db), [(1, 30), (2, 90)])\n"
+  }
+}

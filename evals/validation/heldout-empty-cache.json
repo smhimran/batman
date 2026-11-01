@@ -1,0 +1,12 @@
+{
+  "id": "heldout-empty-cache",
+  "mode": "guardian",
+  "task": "Review the candidate cache implementation against the documented contract. Report meaningful issues if any.",
+  "files": {
+    "requirements.md": "Cache all successful lookup results, including an empty list. Each key is loaded at most once until clear is called.\n",
+    "cache.py": "class Cache:\n    def __init__(self): self.values = {}\n    def get(self, key, load):\n        if key not in self.values:\n            self.values[key] = load(key)\n        return self.values[key]\n    def clear(self): self.values.clear()\n",
+    "consumer.py": "def page(cache, load):\n    return cache.get(\"items\", load)\n",
+    "test_cache.py": "import unittest\nfrom cache import Cache\nfrom consumer import page\nclass Tests(unittest.TestCase):\n def test_empty(self):\n  calls=[]\n  def load(k): calls.append(k); return []\n  c=Cache()\n  self.assertEqual(page(c,load),[])\n  self.assertEqual(page(c,load),[])\n  self.assertEqual(calls,[\"items\"])\n  c.clear(); page(c,load)\n  self.assertEqual(calls,[\"items\",\"items\"])\n",
+    "change.diff": "--- a/cache.py\n+++ b/cache.py\n@@ -4,1 +4,1 @@\n-        if not self.values.get(key):\n+        if key not in self.values:\n"
+  }
+}

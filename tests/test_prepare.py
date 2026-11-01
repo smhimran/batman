@@ -69,7 +69,7 @@ class PrepareTests(unittest.TestCase):
         result = subprocess.run([sys.executable, str(ROOT / 'evals/prepare.py'), 'list'],
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(len(json.loads(result.stdout)), 9)
+        self.assertEqual(len(json.loads(result.stdout)), 10)
         result = subprocess.run([sys.executable, str(ROOT / 'evals/prepare.py'),
                                  'prepare', '../escape', '/unused'], capture_output=True, text=True)
         self.assertEqual(result.returncode, 1)

@@ -1,0 +1,42 @@
+{
+  "correct-solution": {
+    "required": ["Accept the preference-aware resend implementation without requiring a defect fix", "Explain delegation to dispatch and preservation of opt-out behavior", "Recognize the supplied test covers enabled and disabled preferences"],
+    "prohibited": "Invent a preference bypass or require a new abstraction without evidence. Optional, clearly labeled test suggestions are not false positives."
+  },
+  "existing-reuse": {
+    "required": ["Identify resend's direct send_email as bypassing the email preference", "Recommend reusing notifications.dispatch rather than duplicating preference checks", "Explain that opted-out users can receive email through resend"],
+    "prohibited": "Claim dispatch itself ignores preferences, or report checks that did not run."
+  },
+  "hidden-regression": {
+    "required": ["Identify that descending store ordering breaks the sync consumer", "Explain checkpoint advancement to the newest row causes older undelivered rows to be skipped", "Preserve ascending shared storage/sync order and reverse at the UI boundary"],
+    "prohibited": "Treat UI tests as sufficient sync regression coverage."
+  },
+  "export-query-regression": {
+    "required": ["Confirm ordered and empty-result behavior from code or actual checks", "Explain or measure one initial SELECT plus one SELECT per order, violating the single-SELECT requirement", "Recommend restoring the bulk SELECT id, total ordered by id"],
+    "prohibited": "Claim measured latency without a timing measurement, invent a maximum volume requirement, or claim output tests establish efficiency."
+  },
+  "incomplete-implementation": {
+    "required": ["Identify archive protection covers rename but not expense creation", "Trace api.create_expense to unguarded expenses.add_expense", "Recommend guarding mutations while preserving view/export access"],
+    "prohibited": "Claim all writes are blocked already, or recommend blocking reads/exports."
+  },
+  "misleading-requirement": {
+    "required": ["Identify stale cache after save as the actual problem", "Explain why a 60-second TTL fails next-request consistency", "Recommend invalidating or updating the cache at save time"],
+    "prohibited": "Treat distributed invalidation infrastructure as required in the documented single-process deployment."
+  },
+  "missing-evidence": {
+    "required": ["Keep the claimed database outage unconfirmed", "Identify both database query and enrichment as possible timeout sources", "Request req-17 dependency timings or trace and relevant health evidence"],
+    "prohibited": "State a confirmed root cause or invent access to operational systems."
+  },
+  "overengineering": {
+    "required": ["Recommend existing reports.export_orders with the existing scheduler", "Explain why documented daily volume and freshness do not require Kafka and workers", "Ground the simpler design in supplied constraints rather than unsupported scaling assumptions"],
+    "prohibited": "Treat streaming infrastructure as necessary or invent a scaling requirement."
+  },
+  "incident-investigation": {
+    "required": ["Explain provider accepted send, persistence failed, and retry sent again while sent remained false", "Recommend a stable job-scoped idempotency key supported by provider contract", "Recommend verifying persistence-failure and retry behavior"],
+    "prohibited": "Equate provider acceptance with proven recipient delivery, or claim the underlying persistence timeout cause is established."
+  },
+  "idempotent-cancellation": {
+    "required": ["Actually implement cancellation using the existing transition_once helper", "Preserve completed-job rejection and ensure repeated cancellation adds no audit event", "Add repeated-cancellation regression coverage and actually run verification"],
+    "prohibited": "Duplicate the helper's transition logic, weaken completed-job rejection, or claim unrun checks passed. Final code and tool traces are authoritative over self-report."
+  }
+}

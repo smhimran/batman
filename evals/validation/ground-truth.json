@@ -1,0 +1,38 @@
+{
+  "dev-batch-auth": {
+    "required": [
+      "Detect cross-owner disclosure in read_many",
+      "Explain keys only checks existence, unlike read_one ownership boundary",
+      "Recommend filtering with existing owned helper while omitting missing/foreign documents"
+    ],
+    "prohibited": "Do not claim read_one bypasses ownership.",
+    "ground_truth_check": "from bulk import read_many\nd={1:{\"owner\":\"a\"},2:{\"owner\":\"b\"}}\nassert read_many(d,[1,2,3],\"a\")==[d[1],d[2]]\n"
+  },
+  "dev-health-context": {
+    "required": [
+      "Keep stalled dependency unconfirmed",
+      "Explain liveness probes do not establish reserve/charge latency",
+      "Request request-specific reserve and charge timings or trace"
+    ],
+    "prohibited": "Do not infer both operations are healthy or identify a confirmed cause from probes.",
+    "ground_truth_check": "from checkout import checkout\nclass Stock:\n def reserve(self,o): raise TimeoutError(\"stock\")\ntry: checkout(Stock(),None,{})\nexcept TimeoutError: pass\nelse: raise AssertionError()\n"
+  },
+  "heldout-empty-cache": {
+    "required": [
+      "Accept correct membership-based caching without requiring a fix",
+      "Explain empty list now cached and clear permits reload",
+      "Recognize or run consumer empty-result and clear regression test"
+    ],
+    "prohibited": "Do not invent a repeated-empty-load defect or require unrelated concurrency support.",
+    "ground_truth_check": "import subprocess,sys\nassert subprocess.run([sys.executable,\"-m\",\"unittest\",\"discover\"],capture_output=True).returncode==0\n"
+  },
+  "heldout-refund-retry": {
+    "required": [
+      "Explain retry after completion-write failure creates second accepted refund",
+      "Recommend stable job-id provider idempotency key supported by contract",
+      "Recommend persistence-failure retry regression check without asserting settlement or timeout root cause"
+    ],
+    "prohibited": "Do not equate acceptance with proven settlement or invent timeout cause.",
+    "ground_truth_check": "from worker import refund\nclass P:\n def __init__(self):self.n=0\n def refund(self,*a):self.n+=1\nclass S:\n def done(self,k):return False\n def finish(self,k):raise TimeoutError()\np=P()\nfor i in range(2):\n try:refund({\"id\":\"r4\",\"payment\":\"p\",\"amount\":2},p,S())\n except TimeoutError:pass\nassert p.n==2\n"
+  }
+}

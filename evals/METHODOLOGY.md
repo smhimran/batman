@@ -2,7 +2,7 @@
 
 ## Status
 
-Nine controlled scenarios and a Promptfoo snapshot comparison are implemented. The Executor scenario was added after the [16-run host-agent pilot](reports/2026-10-31-pilot.md), whose raw final responses cover the original eight scenarios. No Promptfoo provider results are recorded yet. Keyword assertions are smoke checks only: they can pass incorrect or speculative answers. They are not a quality score, and they do not prove repository inspection. In particular, the correct-solution keyword assertion does not measure false positives; its manual rubric does.
+Ten controlled scenarios and a Promptfoo snapshot comparison are implemented. The Executor and export-query-regression scenarios were added after the [16-run host-agent pilot](reports/2026-10-31-pilot.md), whose raw final responses cover the original eight scenarios. Later authenticated CLI/Promptfoo results are recorded in the [comparison pilot](reports/2026-11-01-comparison.md), [focused follow-up](reports/2026-11-01-efficiency.md), and [80-trial rerun](reports/2026-11-01-rerun.md). Those tool-use experiments are distinct from the snapshot adapter described below. Keyword assertions are smoke checks only: they can pass incorrect or speculative answers. They are not a quality score, and they do not prove repository inspection. In particular, the correct-solution keyword assertion does not measure false positives; its manual rubric does.
 
 The snapshot comparison supplies the same task and files to both prompts. Only Batman instructions differ. It measures reasoning over supplied context, not tool use, repository discovery, execution efficiency, or installation behavior. The snapshot adapter loads shared principles and the selected mode explicitly because it has no file-reading tool.
 
@@ -46,6 +46,7 @@ Do not supply this file, tests, or expected outcomes to evaluated agents.
 | overengineering | Reuse `reports.export_orders` with the existing scheduler. The daily SQLite query meets the documented volume and freshness needs. | Treating Kafka and workers as necessary without evidence or inventing a scaling requirement. |
 | incident-investigation | A send was accepted, persistence failed, then the retry sent again because sent=false. Use a stable job idempotency key supported by the provider and verify persistence failure/retry behavior. | Claiming recipient delivery is proven by provider acceptance, or claiming the underlying timeout cause is known. |
 | idempotent-cancellation | Implement `cancel_job` by reusing `transition_once`, preserve completed-job rejection, add repeated-cancellation coverage, and verify existing behavior. | Duplicating transition logic, weakening completed-job rejection, or claiming unrun tests passed. |
+| export-query-regression | Verify ordered and empty results, demonstrate N+1 SELECTs against the single-SELECT requirement, and recommend the original bulk query. | Claiming latency was measured, inventing a volume limit, or treating passing output tests as efficiency coverage. |
 
 ## Agent-level follow-up
 
@@ -53,4 +54,12 @@ For a real tool-use comparison, run `python3 evals/prepare.py prepare SCENARIO N
 
 Give the agent only the task and that workspace; enable the skill only for the Batman variant. Use neutral workspace names to avoid hinting at the outcome. Keep the mode references available through the installed skill. Capture tool traces and final output. Create a new workspace for each run and hide rubrics and sibling scenarios. Count inspection only if observed in the trace. Keep tools, budgets, model, and repository state equivalent across variants.
 
-Run all nine scenarios with repeated samples and retain comparable execution metadata before drawing broader conclusions. Publish results only with limitations, not a general improvement claim from a small pilot.
+Run all ten scenarios with repeated samples and retain comparable execution metadata before drawing broader conclusions. Publish results only with limitations, not a general improvement claim from a small pilot.
+
+## Review protocol acceptance checks
+
+For Guardian tool-use trials, inspect the captured trace: requirements and relevant codebase entry points, contracts, consumers, and tests must be inspected before opening the diff. A final answer claiming this order is insufficient. Mark this dimension N/A for snapshot comparisons, which supply all files together.
+
+Check that the response assesses requirement coverage, implementation efficiency where relevant, and regression safety before optional style feedback. On export-query-regression, require the observed operation count or the concrete N+1 mechanism; do not require a fabricated timing result. On missing-evidence and misleading-requirement, verify that unsupported premises stay unknown rather than becoming acceptance criteria or confirmed causes. Re-run the correct-solution control to check that stronger skepticism does not manufacture defects.
+
+The [80-trial rerun](reports/2026-11-01-rerun.md) records fresh behavioral trials and an inspection-order audit of the revised protocol. It preserves measured task outcomes but does not demonstrate a reliable efficiency or workflow-compliance improvement. Historical pilot responses alone do not validate revised instructions.

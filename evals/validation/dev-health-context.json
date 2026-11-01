@@ -1,0 +1,10 @@
+{
+  "id": "dev-health-context",
+  "mode": "detective",
+  "task": "Investigate the checkout timeout. Explain what the evidence establishes and the next useful check.",
+  "files": {
+    "checkout.py": "def checkout(stock, payment, order):\n    stock.reserve(order)\n    return payment.charge(order)\n",
+    "incident.log": "request=c7 checkout timeout after 20s. No dependency span available.\n",
+    "health.log": "Same minute: stock health probe 200 in 4ms; payment health probe 200 in 3ms. Probes check process liveness only.\n"
+  }
+}
