@@ -73,31 +73,33 @@ Reviews, investigations, proposals, and plans stay read-only unless changes are 
 
 ## What the benchmarks show
 
-These results describe earlier versions of the combined skill. They do not measure this rewrite or the split skills. Shorter instructions alone do not prove lower token use or better results.
+The latest [80-trial confirmation](evals/reports/2026-11-08-diff-first.md) evaluates the split skills, including the updated diff-first reviewer. It uses fresh Codex sessions, the same requested `gpt-6-sol` model with medium reasoning, ten development fixtures, and two repetitions per task and variant.
 
-The latest [80-trial rerun](evals/reports/2026-11-01-rerun.md) used fresh Codex sessions, the same requested model and reasoning settings, ten development fixtures, and two repetitions. It compared the previous and revised skill alongside plain Codex and, for reviews, two reviewer approaches.
+| Review approach | Rubric score / 100 | Median reported tokens |
+| --- | ---: | ---: |
+| Updated Batman | 96.7 | 82,941 |
+| Previous split Batman | 100.0 | 98,979 |
+| Plain Codex | 86.7 | 76,773.5 |
+| Superpowers reviewer template on Codex | 100.0 | 86,377.5 |
+| Codex built-in reviewer | 96.7 | Unavailable |
 
-The revised skill preserved the measured task outcomes and matched the comparison reviewers on the frozen review rubric. **Every review variant identified the same core defects or accepted the correct-code control.** Numerical differences from plain Codex primarily concern reuse and explicit repair recommendations, rather than unique defect detection.
+The updated reviewer used **16.2% fewer median tokens than the previous version**, about **8% more than plain Codex** and **4% fewer than the Superpowers template**. Its one rubric deduction concerned offering a duplicated preference check alongside reuse, rather than a missed defect. The rubric also measures explanation and repair completeness; it is not a pure bug-detection score.
 
-| Previous → revised Batman | Result |
-| --- | --- |
-| Overall median reported tokens | 104,648 → 100,455, a 4.0% decrease |
-| Review median reported tokens | 6.6% lower |
-| Broader-task median reported tokens | 17.3% higher |
-| Strict context-before-diff compliance | 9/10 → 7/10 review trials |
+Broader tasks scored **96.7/100** for the updated snapshot. Those task-specific instructions were unchanged, so their score and usage variation cannot be attributed to the review edit. Reported token counts include cached input and are not subscription charges. Native review usage counters were unavailable.
 
-The 15% token-reduction target was missed. The revision did not demonstrate a reliable efficiency or inspection-order improvement. Reported tokens include cached input and are not subscription charges.
+The final confirmation completed all 80 trials without execution errors. Earlier quota failures and recovery calls were retained separately and excluded after five comparator responses read globally installed Batman instructions. The harness now disables nested global skill aliases and canonical paths using a frozen manifest; no global skill reads were observed in the clean confirmation. The report includes the full execution accounting and isolation repair.
 
-These are small, author-controlled development fixtures with model-assisted grading, not independent real-world benchmarks. They do not establish general superiority or a population false-positive rate. The Superpowers comparison evaluates its pinned reviewer template on Codex, not its full orchestration framework. Authenticated Claude Code execution was not compared.
+These are small, author-controlled development fixtures with model-assisted grading, not independent real-world benchmarks. They do not establish general superiority, statistical significance, or a population false-positive rate. Superpowers means its pinned reviewer template on Codex, not its full orchestration framework. Authenticated Claude Code execution was not compared. The new review workflow explicitly starts with the diff, so the old context-before-diff compliance metric no longer applies.
 
-Additional evidence:
+Earlier evidence:
 
-- [Original comparison pilot](evals/reports/2026-11-01-comparison.md): outcome scores, repair-specificity distinctions, and overhead.
-- [Focused before/after experiment](evals/reports/2026-11-01-efficiency.md): predefined measures, execution failures, and validation limitations.
-- [Trace and grading audit](evals/reports/2026-11-01-pilot-audit.md): useful verification versus avoidable overhead.
+- [First split-skill comparison](evals/reports/2026-11-08-split.md): initial results and connectivity recovery.
+- [Combined-skill rerun](evals/reports/2026-11-01-rerun.md): earlier efficiency and inspection-order results.
+- [Original comparison pilot](evals/reports/2026-11-01-comparison.md): outcome scores and repair-specificity distinctions.
+- [Focused before/after experiment](evals/reports/2026-11-01-efficiency.md): predefined measures and validation limitations.
 - [Validation task limitations](evals/validation/KNOWN_LIMITATIONS.md): synthetic task provenance and the ambiguous cache control.
 
-Raw trial bundles are excluded from Git. Reports identify their local evidence locations; those bundles must be shared separately for a complete trace audit.
+Raw trial bundles are excluded from Git. Reports identify their local evidence locations; share those bundles separately for a complete trace audit. The final confirmation uses corrected isolation settings, so historical token figures are not directly comparable across reports.
 
 ## Development and evaluation
 
