@@ -42,13 +42,18 @@ def codex_command(model, workspace, answer, writable=False):
         skill = directory / 'SKILL.md'
         if skill.is_file():
             global_skills.add(str(skill))
-            return  # A linked skill may contain fixtures; do not discover inside it.
+            global_skills.add(str(skill.resolve()))
+            # The host also discovers nested skills beneath linked repositories.
         ancestors = ancestors | {directory.resolve()}
         for child in directory.iterdir():
-            if child.is_dir():
+            if child.is_dir() and child.name not in ('.git', '__pycache__'):
                 discover(child, ancestors)
-    for base in (Path.home() / '.agents/skills', Path.home() / '.codex/skills'):
-        discover(base)
+    manifest = Path(__file__).with_name('global-disabled-skills.json')
+    if manifest.exists():
+        global_skills.update(json.loads(manifest.read_text()))
+    else:
+        for base in (Path.home() / '.agents/skills', Path.home() / '.codex/skills'):
+            discover(base)
     global_skills = sorted(global_skills)
     disabled = ','.join('{path=' + json.dumps(p) + ',enabled=false}' for p in global_skills)
     return ['codex', 'exec', '--ignore-user-config', '--ephemeral',
@@ -73,9 +78,16 @@ def call_api(prompt, options, context):
     prepare(workspace, data)
     instructions = ''
     if variant in ('batman', 'before', 'after'):
-        skill = workspace / '.agents/skills/batman'
-        shutil.copytree(root / 'inputs' / (variant if variant in ('before', 'after') else 'batman'), skill)
-        instructions = 'Read .agents/skills/batman/SKILL.md and use Batman at Standard depth.\n'
+        source = root / 'inputs' / (variant if variant in ('before', 'after') else 'batman')
+        if (source / 'skills').is_dir():
+            selected = {'guardian': 'batman-review', 'detective': 'batman-investigate',
+                        'strategist': 'batman-design', 'challenger': 'batman-challenge',
+                        'executor': 'batman-execute'}[data['mode']]
+            shutil.copytree(source / 'skills', workspace / '.agents/skills')
+            instructions = f'Read .agents/skills/{selected}/SKILL.md and use {selected} at Standard depth.\n'
+        else:
+            shutil.copytree(source, workspace / '.agents/skills/batman')
+            instructions = 'Read .agents/skills/batman/SKILL.md and use Batman at Standard depth.\n'
     elif variant == 'superpowers-reviewer':
         raw = (root / 'inputs/superpowers/code-reviewer.md').read_text()
         body = raw.split('  prompt: |\n', 1)[1].split('\n**Placeholders:**', 1)[0]

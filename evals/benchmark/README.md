@@ -114,3 +114,14 @@ provider metadata. The current summarizer includes these in all-attempt counts
 and derives cohort from scenario mode, including new validation tasks. Older
 frozen summarizers hardcode legacy scenario names and omit outer worker errors;
 do not use those summaries as overall success rates for a new suite.
+
+## Nested global skill isolation
+
+Hosts can discover nested SKILL.md files under a symlinked repository, including
+focused skills and saved evaluation snapshots. Disabling only the top-level
+Batman entry is insufficient. The provider now enumerates nested aliases and
+canonical paths. For a frozen run, place the captured path list in
+`harness/global-disabled-skills.json`; both trial and grader commands then use
+the same list throughout execution. Audit raw commands for global skill reads,
+and exclude contaminated runs. The 8 November diff-first confirmation report
+records the observed contamination and matched rerun with this repair.

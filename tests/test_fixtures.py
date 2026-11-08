@@ -98,7 +98,7 @@ assert len(queries) == 1, queries
     def test_skill_references_resolve(self):
         text = (ROOT / 'SKILL.md').read_text()
         self.assertTrue(text.startswith('---\nname: batman\ndescription: '))
-        for link in re.findall(r'\]\((references/[^)]+)\)', text):
+        for link in re.findall(r'\]\((skills/[^)]+)\)', text):
             self.assertTrue((ROOT / link).is_file(), link)
         self.assertLess(len(text.splitlines()), 150)
 
@@ -107,7 +107,8 @@ assert len(queries) == 1, queries
         self.assertEqual(len(paths), 10)
         for path in paths:
             data = json.loads(path.read_text())
-            self.assertTrue((ROOT / 'references' / f"{data['mode']}.md").is_file())
+            modes = {'detective': 'investigate', 'strategist': 'design', 'challenger': 'challenge', 'guardian': 'review', 'executor': 'execute'}
+            self.assertTrue((ROOT / 'skills' / f"batman-{modes[data['mode']]}" / 'SKILL.md').is_file())
             for name in data['files']:
                 self.assertFalse(Path(name).is_absolute())
                 self.assertNotIn('..', Path(name).parts)

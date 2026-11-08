@@ -22,7 +22,7 @@ def prepare(root):
     after.mkdir()
     for name in ('SKILL.md', 'LICENSE'):
         shutil.copy2(REPO / name, after / name)
-    shutil.copytree(REPO / 'references', after / 'references')
+    shutil.copytree(REPO / 'skills', after / 'skills')
     shutil.copytree(REPO / 'evals/scenarios', inputs / 'scenarios')
     validation = REPO / 'evals/validation'
     truth = json.loads((validation / 'ground-truth.json').read_text())

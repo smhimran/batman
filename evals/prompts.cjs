@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
+const modes = { detective: 'investigate', strategist: 'design', challenger: 'challenge', guardian: 'review', executor: 'execute' };
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
 function fixture(id) {
@@ -14,7 +15,7 @@ function prompt(id, enabled) {
   const context = Object.entries(data.files).map(([name, content]) =>
     `FILE: ${name}\n${content}`).join('\n\n');
   const instructions = enabled
-    ? [read('SKILL.md'), read('references/principles.md'), read(`references/${data.mode}.md`)].join('\n\n')
+    ? read(`skills/batman-${modes[data.mode]}/SKILL.md`)
     : 'Act as a software engineer. Answer the task using the supplied evidence.';
   return [
     { role: 'system', content: instructions },

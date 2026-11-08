@@ -15,16 +15,16 @@ class InstallTests(unittest.TestCase):
     def test_both_hosts_receive_only_core_files_and_reinstall_is_unchanged(self):
         with tempfile.TemporaryDirectory() as temporary:
             result = install.install(temporary, 'both')
-            self.assertEqual([item['status'] for item in result], ['installed', 'installed'])
+            self.assertEqual([item['status'] for item in result], ['installed'] * (2 * len(install.SKILLS)))
             for item in result:
                 target = Path(item['path'])
-                self.assertTrue(install.matches(target, install.core_files()))
+                self.assertTrue(install.matches(target, install.core_files(target.name)))
                 self.assertEqual((target / 'LICENSE').read_bytes(), (ROOT / 'LICENSE').read_bytes())
                 self.assertFalse((target / 'evals').exists())
                 self.assertFalse((target / 'tests').exists())
                 self.assertFalse((target / 'scripts').exists())
             result = install.install(temporary, 'both', check=True)
-            self.assertEqual([item['status'] for item in result], ['unchanged', 'unchanged'])
+            self.assertEqual([item['status'] for item in result], ['unchanged'] * (2 * len(install.SKILLS)))
 
     def test_existing_different_skill_is_preserved_and_both_hosts_preflight(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -59,23 +59,48 @@ class InstallTests(unittest.TestCase):
             outside = root / 'outside'
             outside.mkdir()
             (outside / 'payload.md').write_text('external content')
-
-            for symlink in ['references', 'SKILL.md']:
-                with self.subTest(symlink=symlink):
-                    source = root / f"source-{symlink.replace('.', '-')}"
+            for link in ('skills', 'skills/batman', 'skills/batman/agents',
+                         'skills/batman/SKILL.md', 'LICENSE'):
+                with self.subTest(link=link):
+                    source = root / link.replace('/', '-').replace('.', '-')
                     source.mkdir()
-                    (source / 'SKILL.md').write_text('skill')
+                    (source / 'skills/batman/agents').mkdir(parents=True)
+                    (source / 'skills/batman/SKILL.md').write_text('skill')
                     (source / 'LICENSE').write_text('license')
-                    (source / 'agents').mkdir()
-                    (source / 'references').mkdir()
-                    target = source / symlink
-                    target.unlink() if target.is_file() else target.rmdir()
-                    target.symlink_to(outside if symlink == 'references'
-                                      else outside / 'payload.md',
-                                      target_is_directory=symlink == 'references')
+                    target = source / link
+                    import shutil
+                    if target.is_dir():
+                        shutil.rmtree(target)
+                        target.symlink_to(outside, target_is_directory=True)
+                    else:
+                        target.unlink()
+                        target.symlink_to(outside / 'payload.md')
                     with patch.object(install, 'SOURCE', source):
                         with self.assertRaisesRegex(ValueError, 'Source symlinks are unsupported'):
                             install.core_files()
+
+    def test_conflict_in_later_skill_prevents_all_writes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary) / '.claude/skills/batman-execute'
+            target.mkdir(parents=True)
+            (target / 'SKILL.md').write_text('user version')
+            with self.assertRaises(ValueError):
+                install.install(temporary, 'both')
+            self.assertFalse((Path(temporary) / '.agents').exists())
+            self.assertEqual(list(target.parent.iterdir()), [target])
+
+    def test_installed_router_links_resolve_to_standalone_skills(self):
+        import re
+        with tempfile.TemporaryDirectory() as temporary:
+            install.install(temporary, 'codex')
+            base = Path(temporary) / '.agents/skills'
+            router = base / 'batman/SKILL.md'
+            links = re.findall(r'\]\(([^)]+)\)', router.read_text())
+            self.assertEqual(len(links), 5)
+            for link in links:
+                target = router.parent / link
+                self.assertTrue(target.is_file(), target)
+                self.assertIn('## Keep the work focused', target.read_text())
 
 
 if __name__ == '__main__':

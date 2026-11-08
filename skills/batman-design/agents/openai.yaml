@@ -1,0 +1,4 @@
+interface:
+  display_name: "Batman Design"
+  short_description: "Plan the smallest complete solution"
+  default_prompt: "Use $batman-design to design a solution for this task."

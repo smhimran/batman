@@ -1,32 +1,49 @@
 # Batman
 
-**Evidence-driven engineering for coding agents.** Investigate the problem, follow the relevant code and consumers, and verify what actually happens.
+Five focused skills for investigating, planning, questioning, reviewing, and fixing software. Read the relevant code, choose the smallest complete solution, and check what actually happens.
 
-Batman is a portable Markdown skill for reviewing changes, investigating incidents, designing solutions, challenging assumptions, and implementing fixes. It helps an agent ask whether a change meets the real requirement, whether existing code already solves the problem, and what could break beyond the diff.
+Each skill works on its own. There is no runtime dependency: it uses the coding agent's existing tools and permissions.
 
-The core skill has no runtime dependencies. It uses the host agent's model, tools, context, and permissions.
+## Choose a skill
 
-## Quick start
+| Skill | Use it for | Old mode |
+| --- | --- | --- |
+| [batman-investigate](skills/batman-investigate/SKILL.md) | Find why a bug or incident happened | Detective |
+| [batman-design](skills/batman-design/SKILL.md) | Plan a change that fits the need and existing code | Strategist |
+| [batman-challenge](skills/batman-challenge/SKILL.md) | Test whether a proposal is needed and its assumptions hold | Challenger |
+| [batman-review](skills/batman-review/SKILL.md) | Find concrete bugs, missed requirements, and broken callers | Guardian |
+| [batman-execute](skills/batman-execute/SKILL.md) | Make a complete change and check the result | Executor |
 
-Clone the repository:
+Use a focused skill directly:
+
+```text
+Use $batman-review to review this branch against the ticket.
+Use $batman-investigate to find why these requests time out.
+Use $batman-execute to fix the retry bug and check the affected callers.
+```
+
+`$batman` still selects a skill from the task and understands the old mode names. Quick, Standard, and Deep requests still control how far it explores. Evidence matters at every depth.
+
+The rewrite takes inspiration from [Ponytail](https://github.com/DietrichGebert/ponytail/tree/main/skills): short instructions, plain words, and the smallest change that finishes the job. Reviews read the diff first, then the ticket and requirements, then relevant source code and tests as needed. Findings still need concrete evidence, including affected behavior outside the diff.
+
+## Use without installing
+
+Clone this repository, then give your coding agent the absolute path of a skill:
 
 ```sh
 git clone https://github.com/smhimran/batman.git
 cd batman
 ```
 
-Then give your coding agent a task with the skill's absolute path:
-
 ```text
-Read /absolute/path/to/batman/SKILL.md and use Batman to review this branch.
-Check the requirement, affected consumers, and regression risks.
+Read /absolute/path/to/batman/skills/batman-review/SKILL.md and use it to review this branch.
 ```
 
-This direct approach works without installing a separate Batman command or service.
+The root `SKILL.md` is a compatibility entry point for existing paths. The installable skills live in `skills/`.
 
-### Optional project-local installation
+## Optional project installation
 
-From this repository, install the core files into an existing project:
+Install the five skills and the Batman selector into an existing project:
 
 ```sh
 python3 scripts/install.py --host codex --project /absolute/path/to/project
@@ -35,57 +52,28 @@ python3 scripts/install.py --host codex --project /absolute/path/to/project --ch
 
 Choose `--host codex`, `--host claude`, or `--host both`:
 
-| Host | Installation directory | Invocation |
+| Host | Installation directory | Example invocation |
 | --- | --- | --- |
-| Codex | `.agents/skills/batman/` | `$batman` |
-| Claude Code | `.claude/skills/batman/` | `/batman` |
+| Codex | `.agents/skills/batman-*/` and `.agents/skills/batman/` | `$batman-review` |
+| Claude Code | `.claude/skills/batman-*/` and `.claude/skills/batman/` | `/batman-review` |
 
-The installer copies `SKILL.md`, mode references, agent metadata, and the license. It excludes evaluation fixtures and grader answers. Identical installations stay unchanged; differing installations and symlinked destinations are rejected rather than overwritten. To update a differing copy, back it up and remove it before reinstalling.
+The installer includes skill instructions, agent metadata, and the license. It excludes evaluations, tests, and scripts. It checks all destinations before writing. Identical copies stay unchanged; differing copies and symlinked destinations are preserved and reported as conflicts. To update an old copy, back it up and remove it before reinstalling.
 
-`--check` verifies file contents, not discovery or execution. Host behavior depends on the installed version and configuration. See the dated [native discovery observations](evals/NATIVE_DISCOVERY.md); the later CLI benchmarks use explicit skill-loading instructions and do not establish native invocation behavior for every host.
+`--check` verifies copied contents, not host discovery or execution. The dated [discovery observations](evals/NATIVE_DISCOVERY.md) describe the earlier single-skill layout; they do not verify discovery of this split layout.
 
-## Choose a workflow
+## What the skills keep
 
-Batman selects a mode from your task. You can also name it explicitly.
+- Check important claims against code or actual results. Keep facts separate from guesses.
+- Follow affected callers and existing behavior. A changed-file list is only a starting point.
+- Reuse code when it does the whole job. Avoid features and layers nobody needs.
+- Give findings a real trigger, user impact, evidence, and a useful repair.
+- Run focused checks and report actual results. Stop repeating checks once they answer the question.
 
-| Mode | Use it to… | Example request |
-| --- | --- | --- |
-| **Detective** | Investigate a bug or incident and distinguish hypotheses from evidence. | “Investigate these timeouts. What is established, and which evidence would distinguish the causes?” |
-| **Strategist** | Design the simplest solution that meets the actual constraints. | “Design daily exports using the existing code where practical.” |
-| **Challenger** | Test a proposal's assumptions and necessity. | “Challenge this cache proposal against our consistency requirement.” |
-| **Guardian** | Review requirements, affected consumers, correctness, and regression safety. | “Review this branch against the ticket, including callers outside the diff.” |
-| **Executor** | Implement a scoped change and verify meaningful behavior. | “Fix the confirmed retry bug and add regression coverage.” |
-
-For example:
-
-```text
-Use Batman Guardian at Standard depth to review this branch against the ticket.
-Inspect the relevant source and consumer contracts before the diff. Give concrete
-repair recommendations for demonstrated defects and accept correct implementations.
-```
-
-Depth controls exploration, not evidence standards:
-
-- **Quick:** narrow tasks with limited impact.
-- **Standard:** the default; relevant context, alternatives, and regressions.
-- **Deep:** broader impact, unclear contracts, security, data integrity, or difficult incidents.
-
-The agent reads shared principles and the relevant mode reference. You do not need to load every workflow. See [workflow examples](examples/workflows.md) for sample communication.
-
-## Engineering principles
-
-- **Verify consequential claims.** Separate observed behavior from hypotheses and missing information. Do not invent requirements, logs, access, or test results.
-- **Understand the contract.** In reviews, inspect relevant source and consumer behavior before diff content; widen exploration when dependencies or risk warrant it.
-- **Reuse with evidence.** Inspect existing helpers and alternatives before proposing another implementation. Accept a correct solution without manufacturing objections.
-- **Make findings useful.** Explain the trigger, realistic consequence, inspected evidence, and a concrete repair or next check.
-- **Verify actual behavior.** Use focused reproductions and meaningful regression checks; passing output tests alone may not establish compatibility or efficiency.
-- **Keep effort proportional.** Avoid repeated discovery and checks once the decision has sufficient evidence.
-
-Reviews, investigations, and design work remain read-only unless changes are requested. An implementation request authorizes changes within its scope. Batman grants no additional permissions and does not automatically post reviews, deploy, or publish.
-
-These are instructions to a model, not enforced guarantees. The benchmarks show that loading the skill does not ensure every step is followed.
+Reviews, investigations, proposals, and plans stay read-only unless changes are requested. An implementation request authorizes work within its scope. The skills grant no extra permission to post, deploy, or publish.
 
 ## What the benchmarks show
+
+These results describe earlier versions of the combined skill. They do not measure this rewrite or the split skills. Shorter instructions alone do not prove lower token use or better results.
 
 The latest [80-trial rerun](evals/reports/2026-11-01-rerun.md) used fresh Codex sessions, the same requested model and reasoning settings, ten development fixtures, and two repetitions. It compared the previous and revised skill alongside plain Codex and, for reviews, two reviewer approaches.
 
@@ -139,9 +127,9 @@ Freeze skills, tasks, settings, and grading criteria before execution. Keep grad
 
 | Path | Purpose |
 | --- | --- |
-| [`SKILL.md`](SKILL.md) | Skill entry point and workflow selection |
-| [`references/`](references/) | Shared principles and five mode workflows |
-| [`agents/`](agents/) | Agent interface metadata |
+| [`SKILL.md`](SKILL.md) | Compatibility entry point |
+| [`skills/`](skills/) | Five standalone skills and the Batman selector |
+| [`agents/`](agents/) | Compatibility entry point metadata |
 | [`scripts/install.py`](scripts/install.py) | Optional project-local installer |
 | [`examples/`](examples/) | Workflow and communication examples |
 | [`tests/`](tests/) | Offline behavioral and packaging checks |

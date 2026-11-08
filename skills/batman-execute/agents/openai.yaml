@@ -1,0 +1,4 @@
+interface:
+  display_name: "Batman Execute"
+  short_description: "Make the change and check the result"
+  default_prompt: "Use $batman-execute to implement this task and verify it."

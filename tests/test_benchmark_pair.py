@@ -87,7 +87,7 @@ class PairTests(unittest.TestCase):
             source.mkdir()
             (source / 'SKILL.md').write_text('global skill')
             (source / 'fixture').mkdir()
-            (source / 'fixture/SKILL.md').write_text('nested fixture, not a global skill')
+            (source / 'fixture/SKILL.md').write_text('nested skill exposed by recursive discovery')
             base = home / '.agents/skills'
             base.mkdir(parents=True)
             (base / 'batman').symlink_to(source, target_is_directory=True)
@@ -95,7 +95,7 @@ class PairTests(unittest.TestCase):
                 cmd = provider.codex_command('gpt-6-sol',home,home/'answer')
             config = next(c for c in cmd if c.startswith('skills.config='))
             self.assertIn(str(base/'batman/SKILL.md'),config)
-            self.assertNotIn('fixture/SKILL.md',config)
+            self.assertIn(str(base/'batman/fixture/SKILL.md'),config)
             self.assertIn('enabled=false',config)
 
     def test_all_discovered_global_skills_disabled(self):

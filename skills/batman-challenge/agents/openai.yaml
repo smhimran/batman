@@ -1,0 +1,4 @@
+interface:
+  display_name: "Batman Challenge"
+  short_description: "Test a proposal against the real need"
+  default_prompt: "Use $batman-challenge to challenge this proposal."

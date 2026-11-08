@@ -24,7 +24,7 @@ def main():
     (inputs / 'batman').mkdir()
     for name in ('SKILL.md', 'LICENSE'):
         shutil.copy2(REPO / name, inputs / 'batman' / name)
-    shutil.copytree(REPO / 'references', inputs / 'batman/references')
+    shutil.copytree(REPO / 'skills', inputs / 'batman/skills')
     for name in ('workspaces', 'trials'):
         (root / name).mkdir()
     provenance = {

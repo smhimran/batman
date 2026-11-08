@@ -11,7 +11,10 @@ for (const filename of fs.readdirSync(path.join(__dirname, '../evals/scenarios')
     const batman = prompts.batman({ vars: { scenario } });
     assert.equal(baseline[1].content, batman[1].content);
     assert.notEqual(baseline[0].content, batman[0].content);
-    assert.match(batman[0].content, /# Shared engineering principles/);
+    const mode = JSON.parse(fs.readFileSync(path.join(__dirname, '../evals/scenarios', filename))).mode;
+    const names = {detective: 'Investigate', strategist: 'Design', challenger: 'Challenge', guardian: 'Review', executor: 'Execute'};
+    assert.match(batman[0].content, new RegExp(`# Batman ${names[mode]}`));
+    assert.doesNotMatch(batman[0].content, /Select the workflow/);
     assert.doesNotMatch(batman[1].content, /Required reasoning|grader only/);
   });
 }
