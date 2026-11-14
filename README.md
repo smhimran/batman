@@ -6,13 +6,13 @@ Each skill works on its own. There is no runtime dependency: it uses the coding 
 
 ## Choose a skill
 
-| Skill | Use it for | Old mode |
-| --- | --- | --- |
-| [batman-investigate](skills/batman-investigate/SKILL.md) | Find why a bug or incident happened | Detective |
-| [batman-design](skills/batman-design/SKILL.md) | Plan a change that fits the need and existing code | Strategist |
-| [batman-challenge](skills/batman-challenge/SKILL.md) | Test whether a proposal is needed and its assumptions hold | Challenger |
-| [batman-review](skills/batman-review/SKILL.md) | Find concrete bugs, missed requirements, and broken callers | Guardian |
-| [batman-execute](skills/batman-execute/SKILL.md) | Make a complete change and check the result | Executor |
+| Skill | Use it for |
+| --- | --- |
+| [batman-investigate](skills/batman-investigate/SKILL.md) | Find why a bug or incident happened |
+| [batman-design](skills/batman-design/SKILL.md) | Plan a change that fits the need and existing code |
+| [batman-challenge](skills/batman-challenge/SKILL.md) | Test whether a proposal is needed and its assumptions hold |
+| [batman-review](skills/batman-review/SKILL.md) | Find concrete bugs, missed requirements, and broken callers |
+| [batman-execute](skills/batman-execute/SKILL.md) | Make a complete change and check the result |
 
 Use a focused skill directly:
 
@@ -22,9 +22,9 @@ Use $batman-investigate to find why these requests time out.
 Use $batman-execute to fix the retry bug and check the affected callers.
 ```
 
-`$batman` still selects a skill from the task and understands the old mode names. Quick, Standard, and Deep requests still control how far it explores. Evidence matters at every depth.
+`$batman` selects a skill from the task. Quick, Standard, and Deep requests control how far it explores. Evidence matters at every depth.
 
-The rewrite takes inspiration from [Ponytail](https://github.com/DietrichGebert/ponytail/tree/main/skills): short instructions, plain words, and the smallest change that finishes the job. Reviews read the diff first, then the ticket and requirements, then relevant source code and tests as needed. Findings still need concrete evidence, including affected behavior outside the diff.
+Batman takes inspiration from [Ponytail](https://github.com/DietrichGebert/ponytail/tree/main/skills): short instructions, plain words, and the smallest change that finishes the job. Reviews read the diff first, then the ticket and requirements, then relevant source code and tests as needed. Findings need concrete evidence, including affected behavior outside the diff.
 
 ## Use without installing
 
@@ -39,7 +39,7 @@ cd batman
 Read /absolute/path/to/batman/skills/batman-review/SKILL.md and use it to review this branch.
 ```
 
-The root `SKILL.md` is a compatibility entry point for existing paths. The installable skills live in `skills/`.
+The root `SKILL.md` provides the Batman selector. The installable skills live in `skills/`.
 
 ## Optional project installation
 
@@ -57,11 +57,11 @@ Choose `--host codex`, `--host claude`, or `--host both`:
 | Codex | `.agents/skills/batman-*/` and `.agents/skills/batman/` | `$batman-review` |
 | Claude Code | `.claude/skills/batman-*/` and `.claude/skills/batman/` | `/batman-review` |
 
-The installer includes skill instructions, agent metadata, and the license. It excludes evaluations, tests, and scripts. It checks all destinations before writing. Identical copies stay unchanged; differing copies and symlinked destinations are preserved and reported as conflicts. To update an old copy, back it up and remove it before reinstalling.
+The installer includes skill instructions, agent metadata, and the license. It excludes evaluations, tests, and scripts. It checks all destinations before writing. Identical copies stay unchanged; differing copies and symlinked destinations are preserved and reported as conflicts. To replace a conflicting copy, back it up and remove it before reinstalling.
 
-`--check` verifies copied contents, not host discovery or execution. The dated [discovery observations](evals/NATIVE_DISCOVERY.md) describe the earlier single-skill layout; they do not verify discovery of this split layout.
+`--check` verifies copied contents, not host discovery or execution.
 
-## What the skills keep
+## How the skills work
 
 - Check important claims against code or actual results. Keep facts separate from guesses.
 - Follow affected callers and existing behavior. A changed-file list is only a starting point.
@@ -73,33 +73,24 @@ Reviews, investigations, proposals, and plans stay read-only unless changes are 
 
 ## What the benchmarks show
 
-The latest [80-trial confirmation](evals/reports/2026-11-08-diff-first.md) evaluates the split skills, including the updated diff-first reviewer. It uses fresh Codex sessions, the same requested `gpt-6-sol` model with medium reasoning, ten development fixtures, and two repetitions per task and variant.
+The [benchmark report](evals/reports/2026-11-08-diff-first.md) evaluates the skills using fresh Codex sessions, the same requested `gpt-6-sol` model with medium reasoning, ten development fixtures, and two repetitions per task and variant.
 
 | Review approach | Rubric score / 100 | Median reported tokens |
 | --- | ---: | ---: |
-| Updated Batman | 96.7 | 82,941 |
-| Previous split Batman | 100.0 | 98,979 |
+| Batman | 96.7 | 82,941 |
 | Plain Codex | 86.7 | 76,773.5 |
 | Superpowers reviewer template on Codex | 100.0 | 86,377.5 |
 | Codex built-in reviewer | 96.7 | Unavailable |
 
-The updated reviewer used **16.2% fewer median tokens than the previous version**, about **8% more than plain Codex** and **4% fewer than the Superpowers template**. Its one rubric deduction concerned offering a duplicated preference check alongside reuse, rather than a missed defect. The rubric also measures explanation and repair completeness; it is not a pure bug-detection score.
+The Batman reviewer used about **8% more median tokens than plain Codex** and **4% fewer than the Superpowers template**. Its one rubric deduction concerned offering a duplicated preference check alongside reuse, rather than a missed defect. The rubric also measures explanation and repair completeness; it is not a pure bug-detection score.
 
-Broader tasks scored **96.7/100** for the updated snapshot. Those task-specific instructions were unchanged, so their score and usage variation cannot be attributed to the review edit. Reported token counts include cached input and are not subscription charges. Native review usage counters were unavailable.
+Broader tasks scored **96.7/100**. Reported token counts include cached input and are not subscription charges. Native review usage counters were unavailable.
 
-The final confirmation completed all 80 trials without execution errors. Earlier quota failures and recovery calls were retained separately and excluded after five comparator responses read globally installed Batman instructions. The harness now disables nested global skill aliases and canonical paths using a frozen manifest; no global skill reads were observed in the clean confirmation. The report includes the full execution accounting and isolation repair.
+The benchmark harness disables global skill aliases and canonical paths using a frozen manifest to keep comparator runs isolated from installed Batman instructions. The report includes execution accounting and isolation checks.
 
-These are small, author-controlled development fixtures with model-assisted grading, not independent real-world benchmarks. They do not establish general superiority, statistical significance, or a population false-positive rate. Superpowers means its pinned reviewer template on Codex, not its full orchestration framework. Authenticated Claude Code execution was not compared. The new review workflow explicitly starts with the diff, so the old context-before-diff compliance metric no longer applies.
+These are small, author-controlled development fixtures with model-assisted grading, not independent real-world benchmarks. They do not establish general superiority, statistical significance, or a population false-positive rate. Superpowers means its pinned reviewer template on Codex, not its full orchestration framework. Authenticated Claude Code execution was not compared.
 
-Earlier evidence:
-
-- [First split-skill comparison](evals/reports/2026-11-08-split.md): initial results and connectivity recovery.
-- [Combined-skill rerun](evals/reports/2026-11-01-rerun.md): earlier efficiency and inspection-order results.
-- [Original comparison pilot](evals/reports/2026-11-01-comparison.md): outcome scores and repair-specificity distinctions.
-- [Focused before/after experiment](evals/reports/2026-11-01-efficiency.md): predefined measures and validation limitations.
-- [Validation task limitations](evals/validation/KNOWN_LIMITATIONS.md): synthetic task provenance and the ambiguous cache control.
-
-Raw trial bundles are excluded from Git. Reports identify their local evidence locations; share those bundles separately for a complete trace audit. The final confirmation uses corrected isolation settings, so historical token figures are not directly comparable across reports.
+See [validation task limitations](evals/validation/KNOWN_LIMITATIONS.md) for synthetic task provenance and the ambiguous cache control. Raw trial bundles are excluded from Git. Reports identify their local evidence locations; share those bundles separately for a complete trace audit.
 
 ## Development and evaluation
 
@@ -129,14 +120,14 @@ Freeze skills, tasks, settings, and grading criteria before execution. Keep grad
 
 | Path | Purpose |
 | --- | --- |
-| [`SKILL.md`](SKILL.md) | Compatibility entry point |
+| [`SKILL.md`](SKILL.md) | Batman selector entry point |
 | [`skills/`](skills/) | Five standalone skills and the Batman selector |
-| [`agents/`](agents/) | Compatibility entry point metadata |
+| [`agents/`](agents/) | Batman selector metadata |
 | [`scripts/install.py`](scripts/install.py) | Optional project-local installer |
 | [`examples/`](examples/) | Workflow and communication examples |
 | [`tests/`](tests/) | Offline behavioral and packaging checks |
 | [`evals/benchmark/`](evals/benchmark/) | Authenticated CLI comparison harness |
-| [`evals/scenarios/`](evals/scenarios/) | Original ten development fixtures |
+| [`evals/scenarios/`](evals/scenarios/) | Ten development fixtures |
 | [`evals/validation/`](evals/validation/) | Additional synthetic tasks, ground truth, and validity notes |
 | [`evals/reports/`](evals/reports/) | Results, audits, and limitations |
 
