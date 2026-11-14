@@ -5,23 +5,20 @@ description: Review a PR, branch, commit, or local change for bugs, missed requi
 
 # Batman Review
 
-Check whether the change solves the real problem and keeps existing behavior working.
+Determine whether the change achieves the intended outcome and preserves existing behavior.
 
 ## Review
 
-1. **Read the diff.** Establish the versions being compared and read the change. Note changed behavior and questions to resolve. Keep initial conclusions tentative.
-2. **Read the context.** Check the ticket, requirements, and acceptance criteria against the change. Do not infer the intended outcome from the implementation. Look for required behavior missing from the diff. If context is unavailable, state that limit.
-3. **Follow the source as needed.** Read the surrounding code, callers, dependencies, and tests needed to answer those questions and check affected behavior. The diff is a starting point, not the full review scope. Look for missed paths, wrong results, data loss, security problems, and useful existing code. Check speed and load against actual usage; use call counts or measurements when needed, not guesses about scale.
-4. **Prepare for failure.** Consider the worst case scenarios based on the requirements first, then the code. Verify if the diff holds against all edge cases.
-5. **Check each finding.** Give a real input or situation that reaches the problem. Re-read the code to confirm it can happen. Use a focused check when source alone leaves an important question open. Check what tests actually prove, including important behavior the change should preserve.
-6. **Report what matters.** For each defect, give the location, trigger, user impact, and smallest useful repair. Keep uncertain concerns and optional improvements distinct from proven bugs. Order findings by impact. Accept a sound change without inventing objections.
+1. Read the diff to establish the compared versions and changed behavior. Keep conclusions tentative; the diff does not define the review's scope.
+2. Read the ticket, requirements, and acceptance criteria. Establish what success must look like independently of the implementation. If context is missing, state what cannot be assessed.
+3. Trace required behavior through relevant source, callers, dependencies, and tests, including unchanged paths. Look for missing work and existing code that could satisfy the requirement without duplicate logic. Check performance against actual constraints, not imagined scale.
+4. Check credible failure paths and preserved behavior. For each material requirement, identify supporting source or check results and what remains unverified. Passing tests establish only what they exercise.
+5. Confirm each defect with a reachable input or situation; run a focused check when source leaves important uncertainty. Give its location, trigger, user impact, and recommended repair with the evidence for choosing it. Separate proven bugs, missing evidence, and optional improvements.
 
-Say when no meaningful issue was found, what you checked, and any important limit. If only a diff is available, say which context is missing. A passing test is evidence for what it checks, not a promise that nothing can break. Review stays read-only unless edits are requested.
+Lead with whether the intended outcome is demonstrated, partly demonstrated, or unverified, and why. Order defects by impact. Accept sound changes without inventing objections; no findings alone does not prove the outcome. Stay read-only unless edits are requested.
 
 ## Keep the work focused
 
-Check important claims against code or an actual check. Separate what you know from what you suspect. A ticket explains what the user wants; its explanation of current behavior still needs checking.
+Ground material claims in source, logs, or actual checks; separate facts from hypotheses. A ticket states the need, not proof of the cause. Check existing code against required behavior, permissions, side effects, and failure handling. Prefer verified reuse over duplicate logic; recommend new logic only for a concrete gap. Choose the supported solution rather than listing unequal alternatives as interchangeable.
 
-Follow the relevant code and its callers. Reuse an existing helper only after checking that it does the whole job. Start with the smallest useful read or check; go wider when a dependency or a real risk calls for it. Reuse evidence already gathered and stop checking a question once the answer is clear.
-
-Use plain words. Avoid jargons. Lead with the result, explain the effect on users, and cite the code or check behind it. Say what you could not verify. Never describe a proposed check as passed. Skip empty report sections and objections based only on taste.
+Use the smallest check that settles the question. Expand for unresolved risks; stop when evidence is sufficient. Report the result, supporting evidence, and important gaps in plain words. Never claim unrun checks passed. Skip taste-based objections and empty report sections.

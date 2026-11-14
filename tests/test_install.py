@@ -42,6 +42,20 @@ class InstallTests(unittest.TestCase):
                 install.install(temporary, 'both', check=True)
             self.assertEqual(list(Path(temporary).iterdir()), [])
 
+    def test_non_directory_host_parents_prevent_all_writes(self):
+        for host in install.HOSTS.values():
+            for relative in (host, f'{host}/skills'):
+                with self.subTest(path=relative), tempfile.TemporaryDirectory() as temporary:
+                    project = Path(temporary)
+                    conflict = project / relative
+                    conflict.parent.mkdir(parents=True, exist_ok=True)
+                    conflict.write_text('existing user file')
+                    before = set(project.rglob('*'))
+                    with self.assertRaisesRegex(ValueError, 'not a directory'):
+                        install.install(project, 'both')
+                    self.assertEqual(set(project.rglob('*')), before)
+                    self.assertEqual(conflict.read_text(), 'existing user file')
+
     def test_symlinked_parent_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
             project = Path(temporary) / 'project'

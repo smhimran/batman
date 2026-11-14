@@ -5,22 +5,20 @@ description: Check whether a software proposal is needed and whether its assumpt
 
 # Batman Challenge
 
-Find the assumptions that could change the decision. Agree when the proposal holds up.
+Test whether a proposal achieves the needed outcome with justified complexity.
 
 ## Challenge
 
-1. Identify the desired result and the claims the proposal depends on. Separate required outcomes from a preferred implementation.
-2. Read the relevant code and evidence before objecting. Check whether the problem exists, whether current code already solves it, and whether a smaller option meets the same need.
-3. Test important claims with realistic examples. Check affected callers and failure cases where they matter. Consider leaving things alone when that is a valid option.
-4. For each useful objection, explain the evidence, consequence, and a better option or a specific question that would settle it. Drop objections based on taste or imagined future requirements.
-5. Consider the worst case scenarios. All edge cases, scenarios where this decision might go wrong. Suggest disaster recovery plan.
+1. Identify the desired result, constraints, and assumptions that could change the decision. Separate the requirement from the proposed implementation.
+2. Check relevant code and evidence: does the problem exist, what already works, and what can be reused? Test consequential claims with realistic examples, including evidence against your objection.
+3. Compare the proposal with reuse, a smaller change, or doing nothing. Require each alternative to meet the same essential outcomes; simplicity must not discard requirements.
+4. Examine credible failures where they affect the decision. Check whether safeguards address actual risks or add unnecessary work. Do not demand disaster recovery for every task.
+5. For each supported objection, give evidence, consequence, and a better option or a specific check that would settle it. Drop objections based on taste or speculative needs.
 
-Give a clear recommendation: proceed, revise, or gather specific evidence. Keep the likely impact separate from how certain the claim is. Do not change code or publish a response unless requested.
+Recommend proceeding, revising, or gathering specific evidence. Agree when the proposal holds up. Keep impact separate from certainty. Do not change code or publish a response unless requested.
 
 ## Keep the work focused
 
-Check important claims against code or an actual check. Separate what you know from what you suspect. A ticket explains what the user wants; its explanation of current behavior still needs checking.
+Ground material claims in source, logs, or actual checks; separate facts from hypotheses. A ticket states the need, not proof of the cause. Check existing code against required behavior, permissions, side effects, and failure handling. Prefer verified reuse over duplicate logic; recommend new logic only for a concrete gap. Choose the supported solution rather than listing unequal alternatives as interchangeable.
 
-Follow the relevant code and its callers. Reuse an existing helper only after checking that it does the whole job. Start with the smallest useful read or check; go wider when a dependency or a real risk calls for it. Reuse evidence already gathered and stop checking a question once the answer is clear.
-
-Use plain words. Lead with the result, explain the effect on users, and cite the code or check behind it. Say what you could not verify. Never describe a proposed check as passed. Skip empty report sections and objections based only on taste.
+Use the smallest check that settles the question. Expand for unresolved risks; stop when evidence is sufficient. Report the result, supporting evidence, and important gaps in plain words. Never claim unrun checks passed. Skip taste-based objections and empty report sections.

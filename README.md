@@ -1,6 +1,10 @@
 # Batman
 
-Five focused skills for investigating, planning, questioning, reviewing, and fixing software. Read the relevant code, choose the smallest complete solution, and check what actually happens.
+Evidence-driven engineering skills for investigating bugs, designing resilient solutions, and checking whether changes achieve the intended outcome.
+
+Batman starts with what must happen, follows the relevant system, and supports conclusions with source, logs, or actual checks. Reviews examine requirements, unchanged callers, and existing helpers alongside the diff. Plans account for credible failures and recovery. Challenges test whether a simpler approach meets the same need.
+
+For example, a retry fix may pass its tests yet still duplicate a payment after a timeout. Batman asks whether the failure sequence is covered, whether an existing helper already handles it, and what evidence supports the conclusion.
 
 Each skill works on its own. There is no runtime dependency: it uses the coding agent's existing tools and permissions.
 
@@ -8,11 +12,11 @@ Each skill works on its own. There is no runtime dependency: it uses the coding 
 
 | Skill | Use it for |
 | --- | --- |
-| [batman-investigate](skills/batman-investigate/SKILL.md) | Find why a bug or incident happened |
-| [batman-design](skills/batman-design/SKILL.md) | Plan a change that fits the need and existing code |
-| [batman-challenge](skills/batman-challenge/SKILL.md) | Test whether a proposal is needed and its assumptions hold |
-| [batman-review](skills/batman-review/SKILL.md) | Find concrete bugs, missed requirements, and broken callers |
-| [batman-execute](skills/batman-execute/SKILL.md) | Make a complete change and check the result |
+| [batman-investigate](skills/batman-investigate/SKILL.md) | Reconstruct the failure and test competing explanations |
+| [batman-design](skills/batman-design/SKILL.md) | Plan for the required outcome, credible failures, and recovery |
+| [batman-challenge](skills/batman-challenge/SKILL.md) | Question assumptions and complexity without dropping requirements |
+| [batman-review](skills/batman-review/SKILL.md) | Check the outcome, affected behavior, and opportunities for reuse |
+| [batman-execute](skills/batman-execute/SKILL.md) | Implement the smallest complete change and verify its behavior |
 
 Use a focused skill directly:
 
@@ -63,34 +67,37 @@ The installer includes skill instructions, agent metadata, and the license. It e
 
 ## How the skills work
 
-- Check important claims against code or actual results. Keep facts separate from guesses.
-- Follow affected callers and existing behavior. A changed-file list is only a starting point.
-- Reuse code when it does the whole job. Avoid features and layers nobody needs.
-- Give findings a real trigger, user impact, evidence, and a useful repair.
-- Run focused checks and report actual results. Stop repeating checks once they answer the question.
+- Establish success independently of the proposed implementation.
+- Trace behavior beyond changed files; test explanations against contrary evidence.
+- Reuse existing code after checking its behavior and failure handling against the requirement.
+- Plan safeguards and recovery for credible risks, proportional to their impact.
+- State what the evidence demonstrates and what remains unverified. Stop when the question is settled.
+
+These instructions guide the agent's work; they cannot guarantee correctness or prevent every failure. A clean diff or passing test suite alone does not establish that the user's goal was reached.
 
 Reviews, investigations, proposals, and plans stay read-only unless changes are requested. An implementation request authorizes work within its scope. The skills grant no extra permission to post, deploy, or publish.
 
 ## What the benchmarks show
 
-The [benchmark report](evals/reports/2026-11-08-diff-first.md) evaluates the skills using fresh Codex sessions, the same requested `gpt-6-sol` model with medium reasoning, ten development fixtures, and two repetitions per task and variant.
+The [14 November benchmark report](evals/reports/2026-11-14-updates.md) evaluates the current working-tree skills against the previous snapshot and fresh comparator runs: 80 trials, ten development fixtures, two repetitions, the same requested `gpt-6-sol` model, and medium reasoning.
 
 | Review approach | Rubric score / 100 | Median reported tokens |
 | --- | ---: | ---: |
-| Batman | 96.7 | 82,941 |
-| Plain Codex | 86.7 | 76,773.5 |
-| Superpowers reviewer template on Codex | 100.0 | 86,377.5 |
-| Codex built-in reviewer | 96.7 | Unavailable |
+| Updated Batman | 96.7 | 92,523.5 |
+| Previous Batman snapshot | 100.0 | 92,330 |
+| Plain Codex | 83.3 | 79,481 |
+| Superpowers reviewer template on Codex | 100.0 | 89,215.5 |
+| Codex built-in reviewer | 100.0 | Unavailable |
 
-The Batman reviewer used about **8% more median tokens than plain Codex** and **4% fewer than the Superpowers template**. Its one rubric deduction concerned offering a duplicated preference check alongside reuse, rather than a missed defect. The rubric also measures explanation and repair completeness; it is not a pure bug-detection score.
+Updated Batman used about **16% more median reported tokens than plain Codex** and **4% more than the Superpowers template**. Against the previous snapshot, review tokens were nearly unchanged (+0.2%), with one deduction for offering a duplicated preference check alongside reuse. Every review variant identified the core known defects; most plain-Codex deductions concerned missing explicit repair recommendations, with one unsupported test-pass claim. The rubric is not a pure bug-detection score.
 
-Broader tasks scored **96.7/100**. Reported token counts include cached input and are not subscription charges. Native review usage counters were unavailable.
+Broader tasks scored **96.7/100 for both Batman snapshots**, with about **3% fewer median tokens** for the update. Plain Codex scored 100.0 in that cohort. This run does not demonstrate an overall improvement from the updates.
 
-The benchmark harness disables global skill aliases and canonical paths using a frozen manifest to keep comparator runs isolated from installed Batman instructions. The report includes execution accounting and isolation checks.
+All 80 primary trials completed and were graded. A separate initial batch had 50 runner-initialization failures and no model responses; the report retains that execution accounting. The harness disabled 261 global aliases and canonical paths using a frozen manifest; raw-command audit found no unexpected skill reads, and frozen input hashes remained unchanged.
 
-These are small, author-controlled development fixtures with model-assisted grading, not independent real-world benchmarks. They do not establish general superiority, statistical significance, or a population false-positive rate. Superpowers means its pinned reviewer template on Codex, not its full orchestration framework. Authenticated Claude Code execution was not compared.
+Reported token counts include cached input and are not subscription charges. Native review usage counters were unavailable. These are small, author-controlled development fixtures with model-assisted grading, not independent real-world benchmarks. They do not establish general superiority, statistical significance, or a population false-positive rate. Superpowers means its pinned reviewer template on Codex, not its full orchestration framework. Authenticated Claude Code execution was not compared.
 
-See [validation task limitations](evals/validation/KNOWN_LIMITATIONS.md) for synthetic task provenance and the ambiguous cache control. Raw trial bundles are excluded from Git. Reports identify their local evidence locations; share those bundles separately for a complete trace audit.
+The [8 November report](evals/reports/2026-11-08-diff-first.md) preserves the earlier results. See [validation task limitations](evals/validation/KNOWN_LIMITATIONS.md) for synthetic task provenance and the ambiguous cache control. Raw trial bundles are excluded from Git. Reports identify their local evidence locations; share those bundles separately for a complete trace audit.
 
 ## Development and evaluation
 
@@ -112,7 +119,13 @@ python3 evals/prepare.py prepare hidden-regression /tmp/batman-trial-a
 
 The destination must be new and its parent must exist. The helper prints the task separately and refuses to overwrite an existing workspace.
 
-For behavioral comparisons, follow the [benchmark guide](evals/benchmark/README.md). It uses Promptfoo and the authenticated Codex CLI; **no API key is required for that harness**. The separate snapshot evaluation in [evaluation methodology](evals/METHODOLOGY.md) uses configured provider credentials and measures reasoning over supplied context rather than tool use.
+Run the full behavioral comparison from a terminal without opening the Codex desktop app:
+
+```sh
+python3 scripts/benchmark.py
+```
+
+This uses the installed, signed-in Codex CLI and saves a timestamped report and evidence in `evals/results/`. It can resume interrupted runs. See the [benchmark guide](evals/benchmark/README.md) for options, prerequisites, and the alternative Promptfoo workflow. **No API key is required for this harness.** The separate snapshot evaluation in [evaluation methodology](evals/METHODOLOGY.md) uses configured provider credentials and measures reasoning over supplied context rather than tool use.
 
 Freeze skills, tasks, settings, and grading criteria before execution. Keep grader answers outside evaluated workspaces, disable global discovery that could contaminate comparisons, audit actual traces, and count execution failures. Model-assisted grades need review; completion is not a quality score.
 

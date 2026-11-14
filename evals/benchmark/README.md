@@ -1,5 +1,65 @@
 # Controlled tool-use comparison
 
+## One-command terminal runner
+
+From the repository root:
+
+```sh
+python3 scripts/benchmark.py
+```
+
+The Codex desktop app can stay closed. This uses Python 3.11+, Git, and the
+installed, signed-in Codex CLI. It reuses the authenticated CLI provider directly;
+Promptfoo and API keys are not required for this runner. Model calls use your
+account's usage allowance.
+
+By default it freezes the current working tree, the latest local prior Batman
+snapshot with a completed scoreboard, and a local pinned Superpowers reviewer
+source. With a previous snapshot, it runs the same 80-trial comparison: ten tasks,
+two repetitions, `gpt-6-sol`, medium reasoning, at most three trials at once, then
+two graders at once. Without a prior snapshot it runs 60 trials against the other
+comparators. The default output is a new timestamped directory in `evals/results/`.
+Nothing is installed, committed, published, or written to the README.
+
+The runner saves answers and logs, freezes global skill exclusions, grades against
+the existing rubric, checks frozen hashes, flags suspicious skill-read commands,
+and writes `report.md`, `scoreboard.json`, and `trace-audit.json`. Grades and the
+command-level audit are preliminary; inspect the saved evidence before publishing
+claims. This does not replace the manual audit in the published reports.
+
+It stops scheduling new trials on failure and retains in-flight results. After
+fixing a login, usage-limit, or runner problem, resume using the directory printed
+by the script:
+
+```sh
+python3 scripts/benchmark.py --resume /absolute/path/to/run
+```
+
+Completed trials are skipped. Failed attempts remain in all-attempt counts.
+Interrupted calls may finish before the script exits. A resumed run uses frozen
+inputs, not subsequent skill edits; use a fresh run to benchmark new changes.
+
+To freeze and inspect inputs without model calls:
+
+```sh
+python3 scripts/benchmark.py --prepare-only
+```
+
+Use `--previous RUN/inputs/batman`, `--superpowers-source DIR`, or `--output DIR`
+to choose sources or a new output directory explicitly. The output must not
+already exist. A fresh checkout without the ignored local evidence needs a pinned
+Superpowers source supplied as described below. Run `--help` for options.
+
+To leave it running after closing the terminal on macOS/Linux:
+
+```sh
+nohup python3 scripts/benchmark.py > /tmp/batman-benchmark.log 2>&1 &
+```
+
+Read progress in `/tmp/batman-benchmark.log`; the computer must remain awake.
+
+## Promptfoo workflow
+
 This harness uses Promptfoo to run the installed Codex CLI with its existing
 ChatGPT authentication. It does not need the Codex SDK or an API key. It creates
 fresh temporary Git repositories containing source evidence only, captures

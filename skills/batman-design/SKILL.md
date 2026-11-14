@@ -5,23 +5,19 @@ description: Plan a software change around the actual need and existing code. Us
 
 # Batman Design
 
-Choose the simplest approach that meets the need and fits the codebase.
+Plan the smallest complete solution, including how it behaves when things fail.
 
 ## Design
 
-1. State the outcome and how someone could tell it works. Separate user requirements from guesses about the solution. Check assumptions that could change the plan; keep dependent advice conditional while evidence is missing.
-2. Ask user for clarifications when confused about something, or something is not clear. Do not assume, ask instead.
-3. Read the existing implementation, useful helpers, and affected callers. Find the actual limits: expected use, ownership, compatibility, and what must happen when something fails.
-4. Compare a few practical options. Include reuse, a smaller change, or leaving things alone when those meet the need. Explain only trade-offs that affect the choice. Do not add flexibility for imagined future needs.
-5. Prepare for failure. Assume the worst case scenarios and make the solution resilient to them without losing requirements. Include test plan, and recovery plans for when things go wrong.
-6. Recommend an approach, the parts it touches, and how to check the result. Include migration, recovery, or rollback only when the change needs them. Name unresolved decisions and the evidence needed to settle them.
+1. Establish the desired outcome, constraints, and observable success conditions. Resolve material uncertainty from available evidence; ask only when an important decision remains unresolved.
+2. Trace current behavior, affected callers, and existing helpers. Compare reuse, a smaller change, or leaving things alone against the same requirements. Do not add flexibility for imagined needs.
+3. Identify credible failures from the actual flow and dependencies: partial completion, retries, concurrency, or unavailable services where relevant. State what must remain true, how failure is detected, and how recovery works. Avoid claiming a design is fail-proof.
+4. Recommend the approach and affected interfaces. For each important outcome and failure, name a check that would demonstrate the intended behavior. Include migration or rollback when needed; keep unresolved assumptions explicit.
 
-Keep the plan as small as the task allows. Planning stays read-only unless implementation is requested. If the user already asked for implementation, continue into that work without asking again.
+Keep safeguards proportional to likelihood and impact. Planning stays read-only unless implementation is requested; then continue without asking again. Report the decision, evidence, trade-offs, and remaining gaps.
 
 ## Keep the work focused
 
-Check important claims against code or an actual check. Separate what you know from what you suspect. A ticket explains what the user wants; its explanation of current behavior still needs checking.
+Ground material claims in source, logs, or actual checks; separate facts from hypotheses. A ticket states the need, not proof of the cause. Check existing code against required behavior, permissions, side effects, and failure handling. Prefer verified reuse over duplicate logic; recommend new logic only for a concrete gap. Choose the supported solution rather than listing unequal alternatives as interchangeable.
 
-Follow the relevant code and its callers. Reuse an existing helper only after checking that it does the whole job. Start with the smallest useful read or check; go wider when a dependency or a real risk calls for it. Reuse evidence already gathered and stop checking a question once the answer is clear.
-
-Use plain words. Lead with the result, explain the effect on users, and cite the code or check behind it. Say what you could not verify. Never describe a proposed check as passed. Skip empty report sections and objections based only on taste.
+Use the smallest check that settles the question. Expand for unresolved risks; stop when evidence is sufficient. Report the result, supporting evidence, and important gaps in plain words. Never claim unrun checks passed. Skip taste-based objections and empty report sections.

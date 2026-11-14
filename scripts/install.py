@@ -55,8 +55,11 @@ def install(project, host, check=False):
     # Preflight every host before writing, so an existing skill is never replaced.
     for name in hosts:
         parent = project / HOSTS[name]
-        if parent.is_symlink() or (parent / 'skills').is_symlink():
-            raise ValueError(f'Refusing a symlinked skill location: {parent}')
+        for location in (parent, parent / 'skills'):
+            if location.is_symlink():
+                raise ValueError(f'Refusing a symlinked skill location: {location}')
+            if location.exists() and not location.is_dir():
+                raise ValueError(f'Skill location is not a directory: {location}')
         for skill, expected in packages.items():
             destination = parent / 'skills' / skill
             if destination.exists() or destination.is_symlink():
