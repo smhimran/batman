@@ -14,7 +14,7 @@ Reconstruct what happened and why; test the explanation against evidence.
 3. Reproduce safely when useful. Link the symptom to the failing path and causal mechanism. Distinguish an immediate failure from its underlying cause; a reproduction of the symptom alone does not explain it.
 4. Mark what is confirmed, inferred, or unknown. When evidence is unavailable, request the specific trace, input, or timing needed and continue independent work. Do not invent access or rule out an untested cause.
 
-Conclude with the best-supported explanation and its causal evidence. If causes remain unresolved, choose the next check that distinguishes them; otherwise recommend a repair that addresses the confirmed mechanism. Separate containment from a lasting fix. Stay read-only unless changes are requested; production changes need authorization.
+Conclude with the best-supported explanation and its causal evidence. Distinguish locating the failure from explaining its cause. If causes remain unresolved, choose the next discriminating check and identify corroborating evidence needed before confirming the cause; otherwise recommend a repair that addresses the confirmed mechanism. Separate containment from a lasting fix. Stay read-only unless changes are requested; production changes need authorization.
 
 ## Keep the work focused
 
