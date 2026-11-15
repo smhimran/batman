@@ -99,14 +99,28 @@ class PairTests(unittest.TestCase):
             self.assertIn('enabled=false',config)
 
     def test_all_discovered_global_skills_disabled(self):
-        cmd = provider.codex_command('gpt-6-sol', Path('/tmp/example'), Path('/tmp/answer'))
-        config = next(c for c in cmd if c.startswith('skills.config='))
-        for base in (Path.home()/'.agents/skills',Path.home()/'.codex/skills'):
-            for skill in base.rglob('SKILL.md'):
-                self.assertIn(json.dumps(str(skill)),config)
-        self.assertIn('enabled=false', config)
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary).resolve()
+            skills = [home / '.agents/skills/example/SKILL.md',
+                      home / '.codex/skills/other/nested/SKILL.md']
+            for skill in skills:
+                skill.parent.mkdir(parents=True)
+                skill.write_text('test skill')
+            with patch.object(provider.Path, 'home', return_value=home):
+                cmd = provider.codex_command('gpt-6-sol', home, home / 'answer')
+            config = next(c for c in cmd if c.startswith('skills.config='))
+            import tomllib
+            self.assertEqual(tomllib.loads(config)['skills']['config'], [
+                {'path': str(path), 'enabled': False} for path in sorted(skills)])
         self.assertIn('--ignore-user-config',cmd)
         self.assertIn('--ephemeral',cmd)
+
+    def test_empty_global_skill_directories_need_no_exclusions(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary)
+            with patch.object(provider.Path, 'home', return_value=home):
+                cmd = provider.codex_command('gpt-6-sol', home, home / 'answer')
+            self.assertIn('skills.config=[]', cmd)
 
 
 if __name__ == '__main__':
