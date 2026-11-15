@@ -1,5 +1,9 @@
 # Batman
 
+**Evidence over assumptions.**
+
+![Batman coding emblem](assets/batman-emblem.png)
+
 Evidence-driven engineering skills for investigating bugs, designing resilient solutions, and checking whether changes achieve the intended outcome.
 
 Batman starts with what must happen, follows the relevant system, and supports conclusions with source, logs, or actual checks. Reviews examine requirements, unchanged callers, and existing helpers alongside the diff. Plans account for credible failures and recovery. Challenges test whether a simpler approach meets the same need.
@@ -79,25 +83,31 @@ Reviews, investigations, proposals, and plans stay read-only unless changes are 
 
 ## What the benchmarks show
 
-The [14 November benchmark report](evals/reports/2026-11-14-updates.md) evaluates the current working-tree skills against the previous snapshot and fresh comparator runs: 80 trials, ten development fixtures, two repetitions, the same requested `gpt-6-sol` model, and medium reasoning.
+The [15 November benchmark report](evals/reports/2026-11-15-investigation.md) compares the current skills with the previous snapshot and fresh comparator runs: **80 completed trials, zero execution failures**, ten development fixtures, two repetitions, requested `gpt-6-sol`, and medium reasoning.
 
 | Review approach | Rubric score / 100 | Median reported tokens |
 | --- | ---: | ---: |
-| Updated Batman | 96.7 | 92,523.5 |
-| Previous Batman snapshot | 100.0 | 92,330 |
-| Plain Codex | 83.3 | 79,481 |
-| Superpowers reviewer template on Codex | 100.0 | 89,215.5 |
+| Batman | 100.0 | 96,575 |
+| Previous Batman snapshot | 100.0 | 94,805.5 |
+| Plain Codex | 86.7 | 85,351 |
+| Superpowers reviewer template on Codex | 100.0 | 87,079 |
 | Codex built-in reviewer | 100.0 | Unavailable |
 
-Updated Batman used about **16% more median reported tokens than plain Codex** and **4% more than the Superpowers template**. Against the previous snapshot, review tokens were nearly unchanged (+0.2%), with one deduction for offering a duplicated preference check alongside reuse. Every review variant identified the core known defects; most plain-Codex deductions concerned missing explicit repair recommendations, with one unsupported test-pass claim. The rubric is not a pure bug-detection score.
+| Broader tasks | Rubric score / 100 | Median reported tokens |
+| --- | ---: | ---: |
+| Batman | 100.0 | 106,631.5 |
+| Previous Batman snapshot | 93.3 | 105,197 |
+| Plain Codex | 100.0 | 61,501.5 |
 
-Broader tasks scored **96.7/100 for both Batman snapshots**, with about **3% fewer median tokens** for the update. Plain Codex scored 100.0 in that cohort. This run does not demonstrate an overall improvement from the updates.
+Batman met every rubric criterion in all 20 of its trials. The previous snapshot's two investigation deductions concerned requesting traces without also requesting health evidence. Both updated responses distinguished locating the delay from confirming its cause and requested corroborating health data. Reviews retained their 100.0 score in this matched run.
 
-All 80 primary trials completed and were graded. A separate initial batch had 50 runner-initialization failures and no model responses; the report retains that execution accounting. The harness disabled 261 global aliases and canonical paths using a frozen manifest; raw-command audit found no unexpected skill reads, and frozen input hashes remained unchanged.
+This was **not a token-saving result**: Batman used about **13% more review tokens than plain Codex**, **11% more than the Superpowers template**, and **73% more on broader tasks than plain Codex**. Plain-Codex review deductions concerned omitted repair recommendations, so the review score difference is not evidence of unique bug discoveries. The rubric measures required outcomes and repair completeness, not bug detection alone.
 
-Reported token counts include cached input and are not subscription charges. Native review usage counters were unavailable. These are small, author-controlled development fixtures with model-assisted grading, not independent real-world benchmarks. They do not establish general superiority, statistical significance, or a population false-positive rate. Superpowers means its pinned reviewer template on Codex, not its full orchestration framework. Authenticated Claude Code execution was not compared.
+One automated skill-read flag was inspected: a native-review command searched for skill filenames without reading a skill. The report records that audit and the limits of the command heuristic.
 
-The [8 November report](evals/reports/2026-11-08-diff-first.md) preserves the earlier results. See [validation task limitations](evals/validation/KNOWN_LIMITATIONS.md) for synthetic task provenance and the ambiguous cache control. Raw trial bundles are excluded from Git. Reports identify their local evidence locations; share those bundles separately for a complete trace audit.
+Reported tokens include cached input and are not subscription charges. Native review usage counters were unavailable. These are small, author-controlled development fixtures with model-assisted grading, not independent real-world benchmarks. They do not establish general superiority, statistical significance, or a population false-positive rate. Superpowers means its pinned reviewer template on Codex, not its full orchestration framework. Authenticated Claude Code execution was not compared.
+
+The [14 November report](evals/reports/2026-11-14-updates.md) and [8 November report](evals/reports/2026-11-08-diff-first.md) preserve earlier results. See [validation task limitations](evals/validation/KNOWN_LIMITATIONS.md) for synthetic task provenance and the ambiguous cache control. Raw trial bundles are excluded from Git and must be shared separately for a complete trace audit.
 
 ## Development and evaluation
 
