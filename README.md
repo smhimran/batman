@@ -1,8 +1,12 @@
 # Batman
 
-**Evidence over assumptions.**
+<p align="center">
+  <img src="assets/batman-emblem.png" alt="Batman coding emblem" width="560">
+</p>
 
-![Batman coding emblem](assets/batman-emblem.png)
+<p align="center">
+  <em>"It's not who I am underneath, but what I do that defines me."</em>
+</p>
 
 Evidence-driven engineering skills for investigating bugs, designing resilient solutions, and checking whether changes achieve the intended outcome.
 
