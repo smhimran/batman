@@ -8,13 +8,36 @@
   <em>"It's not who I am underneath, but what I do that defines me."</em>
 </p>
 
-Evidence-driven engineering skills for investigating bugs, designing resilient solutions, and checking whether changes achieve the intended outcome.
+Batman is a collection of five evidence-driven software engineering skills and a selector for Codex and Claude Code. It helps your coding agent investigate bugs, design changes, challenge proposals, review code, and implement fixes.
 
-Batman starts with what must happen, follows the relevant system, and supports conclusions with source, logs, or actual checks. Reviews examine requirements, unchanged callers, and existing helpers alongside the diff. Plans account for credible failures and recovery. Challenges test whether a simpler approach meets the same need.
+A diff-focused review can miss an unmet requirement in unchanged code. Batman asks what must happen, follows affected callers and existing helpers, and supports findings with source, logs, or focused checks. Expect concrete findings, repair guidance, and honest statements about what remains unknown—not guaranteed correctness.
 
-For example, a retry fix may pass its tests yet still duplicate a payment after a timeout. Batman asks whether the failure sequence is covered, whether an existing helper already handles it, and what evidence supports the conclusion.
+## Quick start
 
-Each skill works on its own. There is no runtime dependency: it uses the coding agent's existing tools and permissions.
+Clone Batman and install it into an existing project (Python 3.11+):
+
+```sh
+git clone https://github.com/smhimran/batman.git
+cd batman
+python3 scripts/install.py --host codex --project /absolute/path/to/project
+```
+
+Start Codex in that project and invoke:
+
+```text
+Use $batman-review to review this branch against the ticket.
+```
+
+For Claude Code, replace `--host codex` with `--host claude` and invoke `/batman-review review this branch against the ticket`. Use `--host both` to install both layouts. A signed-in host is required for model execution; see [verified host status and remaining gaps](evals/NATIVE_DISCOVERY.md). The installer has no third-party Python dependencies, and the skills use the host's existing tools and permissions.
+
+### Example: a passing diff can still miss the requirement
+
+**Illustrative example, not a benchmark result.** A ticket says archived groups must reject all edits while existing expenses remain readable. A patch blocks renaming an archived group and adds a passing rename test.
+
+| Review scope | What it sees |
+| --- | --- |
+| Changed lines and their test | The rename guard works. |
+| Requirement plus affected callers | The unchanged `create_expense` still accepts expenses for archived groups. Guard that mutation too, then verify reads still work. |
 
 ## Choose a skill
 
@@ -40,12 +63,7 @@ Batman takes inspiration from [Ponytail](https://github.com/DietrichGebert/ponyt
 
 ## Use without installing
 
-Clone this repository, then give your coding agent the absolute path of a skill:
-
-```sh
-git clone https://github.com/smhimran/batman.git
-cd batman
-```
+After cloning, give your coding agent the absolute path of a skill:
 
 ```text
 Read /absolute/path/to/batman/skills/batman-review/SKILL.md and use it to review this branch.
@@ -55,10 +73,9 @@ The root `SKILL.md` provides the Batman selector. The installable skills live in
 
 ## Optional project installation
 
-Install the five skills and the Batman selector into an existing project:
+The quick-start installer copies the five skills and Batman selector. Verify an existing installation with:
 
 ```sh
-python3 scripts/install.py --host codex --project /absolute/path/to/project
 python3 scripts/install.py --host codex --project /absolute/path/to/project --check
 ```
 
@@ -87,35 +104,15 @@ Reviews, investigations, proposals, and plans stay read-only unless changes are 
 
 ## What the benchmarks show
 
-The [15 November benchmark report](evals/reports/2026-11-15-investigation.md) compares the current skills with the previous snapshot and fresh comparator runs: **80 completed trials, zero execution failures**, ten development fixtures, two repetitions, requested `gpt-6-sol`, and medium reasoning.
+The [15 November benchmark report](evals/reports/2026-11-15-investigation.md) records 80 completed trials with zero execution failures. These are small, author-controlled fixtures with model-assisted grades; they do not establish general superiority. Plain Codex matched Batman on broader tasks, and other reviewer configurations matched its review score.
 
-| Review approach | Rubric score / 100 | Median reported tokens |
-| --- | ---: | ---: |
-| Batman | 100.0 | 96,575 |
-| Previous Batman snapshot | 100.0 | 94,805.5 |
-| Plain Codex | 86.7 | 85,351 |
-| Superpowers reviewer template on Codex | 100.0 | 87,079 |
-| Codex built-in reviewer | 100.0 | Unavailable |
+Batman used more reported tokens in that run. Additional useful investigation can justify extra tokens; assess quality, tokens, and latency separately. Reported tokens include cached input and are not subscription charges. Authenticated Claude Code execution was not compared.
 
-| Broader tasks | Rubric score / 100 | Median reported tokens |
-| --- | ---: | ---: |
-| Batman | 100.0 | 106,631.5 |
-| Previous Batman snapshot | 93.3 | 105,197 |
-| Plain Codex | 100.0 | 61,501.5 |
-
-Batman met every rubric criterion in all 20 of its trials. The previous snapshot's two investigation deductions concerned requesting traces without also requesting health evidence. Both updated responses distinguished locating the delay from confirming its cause and requested corroborating health data. Reviews retained their 100.0 score in this matched run.
-
-This was **not a token-saving result**: Batman used about **13% more review tokens than plain Codex**, **11% more than the Superpowers template**, and **73% more on broader tasks than plain Codex**. Plain-Codex review deductions concerned omitted repair recommendations, so the review score difference is not evidence of unique bug discoveries. The rubric measures required outcomes and repair completeness, not bug detection alone.
-
-One automated skill-read flag was inspected: a native-review command searched for skill filenames without reading a skill. The report records that audit and the limits of the command heuristic.
-
-Reported tokens include cached input and are not subscription charges. Native review usage counters were unavailable. These are small, author-controlled development fixtures with model-assisted grading, not independent real-world benchmarks. They do not establish general superiority, statistical significance, or a population false-positive rate. Superpowers means its pinned reviewer template on Codex, not its full orchestration framework. Authenticated Claude Code execution was not compared.
-
-The [14 November report](evals/reports/2026-11-14-updates.md) and [8 November report](evals/reports/2026-11-08-diff-first.md) preserve earlier results. See [validation task limitations](evals/validation/KNOWN_LIMITATIONS.md) for synthetic task provenance and the ambiguous cache control. Raw trial bundles are excluded from Git and must be shared separately for a complete trace audit.
+See the [full results and audit](evals/reports/2026-11-15-investigation.md), [methodology](evals/METHODOLOGY.md), and [fixture limitations](evals/validation/KNOWN_LIMITATIONS.md). Historical reports remain intact. Raw trial bundles are excluded from Git and must be shared separately for a complete trace audit.
 
 ## Development and evaluation
 
-Run the offline checks from the repository root with Python 3 and Node.js:
+Run the offline checks from the repository root with Python 3.11+ and Node.js 22+ (CI uses Python 3.11 and Node.js 22):
 
 ```sh
 python3 -m unittest discover -s tests -v
@@ -160,10 +157,12 @@ Freeze skills, tasks, settings, and grading criteria before execution. Keep grad
 
 ## Contributing
 
+[Open an issue](https://github.com/smhimran/batman/issues) with the host/version, invocation, expected behavior, actual behavior, and a minimal reproduction. Remove credentials and private code from shared logs. Pull requests should explain the observed problem and checks run. See the [beta release notes](RELEASE_NOTES.md) for validation status and release gates.
+
 Prefer concise instructions that change an engineering decision over longer checklists. Explain the observed failure behind a proposed rule, preserve uncertainty and useful repair guidance, and add behavioral coverage where it helps. Keep expected answers separate from evaluated context and label synthetic or author-created tasks honestly.
 
 Run the offline checks and report behavioral trials with their actual limits. Do not optimize instructions for grader keywords, change grading to manufacture a win, or claim verification that did not run.
 
 ## License
 
-[MIT](LICENSE).
+[MIT](LICENSE), copyright 2026 Shah Habibul Imran. Inspired by [Ponytail](https://github.com/DietrichGebert/ponytail/tree/main/skills). Branding and quotation provenance still need review; see the [release audit](RELEASE_AUDIT.md). No affiliation or endorsement is claimed.

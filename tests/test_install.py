@@ -12,6 +12,18 @@ spec.loader.exec_module(install)
 
 
 class InstallTests(unittest.TestCase):
+    def test_each_package_has_matching_host_metadata_and_only_release_files(self):
+        for skill in install.SKILLS:
+            with self.subTest(skill=skill):
+                files = install.core_files(skill)
+                self.assertEqual(set(files), {'SKILL.md', 'agents/openai.yaml', 'LICENSE'})
+                text = files['SKILL.md'].decode()
+                self.assertTrue(text.startswith(f'---\nname: {skill}\ndescription: '))
+                metadata = files['agents/openai.yaml'].decode()
+                self.assertIn('display_name:', metadata)
+                self.assertIn('short_description:', metadata)
+                self.assertIn(f'Use ${skill} ', metadata)
+
     def test_both_hosts_receive_only_core_files_and_reinstall_is_unchanged(self):
         with tempfile.TemporaryDirectory() as temporary:
             result = install.install(temporary, 'both')

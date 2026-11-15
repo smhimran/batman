@@ -3,4 +3,9 @@ __pycache__/
 .promptfoo/
 evals/results/
 .agents/skills/batman/
+.agents/skills/batman-*/
 .claude/skills/batman/
+.claude/skills/batman-*/
+
+# macOS metadata
+.DS_Store
