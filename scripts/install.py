@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
-"""Copy Batman's core files into project-local Codex or Claude skill directories."""
+"""Copy Batman's six skills into a coding agent's project-local skill directory."""
 import argparse
 import json
 import tempfile
 from pathlib import Path
 
 SOURCE = Path(__file__).resolve().parents[1]
-HOSTS = {'codex': '.agents', 'claude': '.claude'}
+HOSTS = {
+    'codex': '.agents', 'claude': '.claude', 'cursor': '.cursor',
+    'copilot': '.github', 'gemini': '.gemini', 'opencode': '.opencode',
+    'cline': '.cline', 'roo': '.roo', 'kiro': '.kiro', 'kimi': '.kimi',
+    'pi': '.agents', 'antigravity': '.agents', 'agents': '.agents',
+    'windsurf': '.windsurf', 'devin': '.devin',
+}
 SKILLS = ('batman', 'batman-investigate', 'batman-design', 'batman-challenge',
           'batman-review', 'batman-execute')
 
@@ -50,7 +56,19 @@ def install(project, host, check=False):
     if not project.is_dir():
         raise ValueError('Project must be an existing directory')
     packages = {skill: core_files(skill) for skill in SKILLS}
-    hosts = list(HOSTS) if host == 'both' else [host]
+    if host == 'both':
+        hosts = ['codex', 'claude']  # Preserve the original two-host option.
+    elif host == 'all':
+        # Some agents share the same discovery directory; write it only once.
+        hosts, seen = [], set()
+        for name, path in HOSTS.items():
+            if path not in seen:
+                hosts.append(name)
+                seen.add(path)
+    elif host in HOSTS:
+        hosts = [host]
+    else:
+        raise ValueError(f'Unknown host: {host}')
     destinations = []
     # Preflight every host before writing, so an existing skill is never replaced.
     for name in hosts:
@@ -90,7 +108,7 @@ def install(project, host, check=False):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--host', choices=[*HOSTS, 'both'], required=True)
+    parser.add_argument('--host', choices=[*HOSTS, 'both', 'all'], required=True)
     parser.add_argument('--project', type=Path, required=True)
     parser.add_argument('--check', action='store_true', help='Verify copied files without modifying the project')
     args = parser.parse_args()

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Batman Investigate"
+  short_description: "Find causes with code and focused checks"
+  default_prompt: "Use $batman-investigate to investigate this failure."

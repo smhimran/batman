@@ -64,7 +64,7 @@ class InstallTests(unittest.TestCase):
                     conflict.write_text('existing user file')
                     before = set(project.rglob('*'))
                     with self.assertRaisesRegex(ValueError, 'not a directory'):
-                        install.install(project, 'both')
+                        install.install(project, 'all')
                     self.assertEqual(set(project.rglob('*')), before)
                     self.assertEqual(conflict.read_text(), 'existing user file')
 
@@ -127,6 +127,46 @@ class InstallTests(unittest.TestCase):
                 target = router.parent / link
                 self.assertTrue(target.is_file(), target)
                 self.assertIn('## Keep the work focused', target.read_text())
+
+    def test_every_host_preserves_packages_and_resolves_selector_links(self):
+        import re
+        for host, directory in install.HOSTS.items():
+            with self.subTest(host=host), tempfile.TemporaryDirectory() as temporary:
+                result = install.install(temporary, host)
+                self.assertEqual(len(result), len(install.SKILLS))
+                self.assertTrue(all(item['status'] == 'installed' for item in result))
+                base = Path(temporary) / directory / 'skills'
+                router = base / 'batman/SKILL.md'
+                for link in re.findall(r'\]\(([^)]+)\)', router.read_text()):
+                    self.assertTrue((router.parent / link).is_file(), (host, link))
+                self.assertTrue(all(item['status'] == 'unchanged'
+                                    for item in install.install(temporary, host)))
+                (base / 'batman-execute/SKILL.md').write_text('user version')
+                with self.assertRaisesRegex(ValueError, 'refusing to overwrite'):
+                    install.install(temporary, host)
+                self.assertEqual((base / 'batman-execute/SKILL.md').read_text(), 'user version')
+
+    def test_all_deduplicates_shared_locations_and_preflights_late_conflicts(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            result = install.install(temporary, 'all')
+            self.assertEqual(len(result), len(set(install.HOSTS.values())) * len(install.SKILLS))
+            self.assertEqual(len({item['path'] for item in result}), len(result))
+            self.assertTrue(all(item['status'] == 'unchanged'
+                                for item in install.install(temporary, 'all', check=True)))
+        with tempfile.TemporaryDirectory() as temporary:
+            conflict = Path(temporary) / '.devin/skills/batman-execute'
+            conflict.mkdir(parents=True)
+            (conflict / 'SKILL.md').write_text('user skill')
+            before = set(Path(temporary).rglob('*'))
+            with self.assertRaisesRegex(ValueError, 'refusing to overwrite'):
+                install.install(temporary, 'all')
+            self.assertEqual(set(Path(temporary).rglob('*')), before)
+
+    def test_unknown_host_does_not_write(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(ValueError, 'Unknown host'):
+                install.install(temporary, 'unknown')
+            self.assertEqual(list(Path(temporary).iterdir()), [])
 
 
 if __name__ == '__main__':

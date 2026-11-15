@@ -8,11 +8,54 @@
   <em>"It's not who I am underneath, but what I do that defines me."</em>
 </p>
 
-Batman is a collection of five evidence-driven software engineering skills and a selector for Codex and Claude Code. It helps your coding agent investigate bugs, design changes, challenge proposals, review code, and implement fixes.
+Batman is a collection of five evidence-driven software engineering skills and a selector for coding agents, including Codex, Claude Code, Cursor, Copilot, Gemini CLI, and OpenCode. It helps your coding agent investigate bugs, design changes, challenge proposals, review code, and implement fixes.
 
 A diff-focused review can miss an unmet requirement in unchanged code. Batman asks what must happen, follows affected callers and existing helpers, and supports findings with source, logs, or focused checks. Expect concrete findings, repair guidance, and honest statements about what remains unknown—not guaranteed correctness.
 
-## Quick start
+## Install
+
+### Codex
+
+Run these in your terminal:
+
+```sh
+codex plugin marketplace add smhimran/batman
+codex plugin add batman@batman
+```
+
+Restart Codex or the desktop app, open your project, and invoke:
+
+```text
+Use $batman:batman-review to review this branch against the ticket.
+```
+
+### Claude Code
+
+Send these as **two separate prompts** in Claude Code:
+
+```text
+/plugin marketplace add smhimran/batman
+```
+
+```text
+/plugin install batman@batman
+```
+
+Start a new session in your project and invoke:
+
+```text
+/batman:batman-review review this branch against the ticket
+```
+
+Use `batman:batman` instead of `batman:batman-review` to let the selector choose a skill. A working, signed-in host is required. If your version lacks these plugin commands, update the host or use the project-local installer below.
+
+### Other coding agents
+
+The [installation guide](INSTALL.md) covers project-local installation for Cursor, Copilot, Gemini CLI, OpenCode, Cline, Roo Code, Kiro, Kimi Code, Pi, Antigravity, Windsurf compatibility, and Devin, plus manual use with other models. Additional host layouts are checked offline; their native runtime behavior remains unverified. Codex execution is verified; Claude installation/discovery is verified, with authenticated execution still unverified. See the [compatibility evidence](evals/NATIVE_DISCOVERY.md).
+
+These commands install from Batman's own GitHub-hosted marketplace, not an official-directory listing. Choose either the plugin or the project-local install for each host to avoid duplicate skills. Plugin invocations are namespaced; the project-local examples below use standalone names.
+
+## Quick start (project-local)
 
 Clone Batman and install it into an existing project (Python 3.11+):
 
@@ -79,7 +122,7 @@ The quick-start installer copies the five skills and Batman selector. Verify an 
 python3 scripts/install.py --host codex --project /absolute/path/to/project --check
 ```
 
-Choose `--host codex`, `--host claude`, or `--host both`:
+Choose a host such as `codex`, `claude`, `cursor`, `copilot`, `gemini`, or `opencode`; see the [full host table](INSTALL.md#project-local-installation-for-other-coding-agents). `--host both` still means Codex plus Claude. `--host all` installs every distinct supported layout.
 
 | Host | Installation directory | Example invocation |
 | --- | --- | --- |
@@ -148,6 +191,9 @@ Freeze skills, tasks, settings, and grading criteria before execution. Keep grad
 | [`skills/`](skills/) | Five standalone skills and the Batman selector |
 | [`agents/`](agents/) | Batman selector metadata |
 | [`scripts/install.py`](scripts/install.py) | Optional project-local installer |
+| [`INSTALL.md`](INSTALL.md) | Marketplace and cross-agent installation instructions |
+| [`plugins/batman/`](plugins/batman/) | Clean generated marketplace payload |
+| [`scripts/build_plugin.py`](scripts/build_plugin.py) | Build/check the marketplace payload |
 | [`examples/`](examples/) | Workflow and communication examples |
 | [`tests/`](tests/) | Offline behavioral and packaging checks |
 | [`evals/benchmark/`](evals/benchmark/) | Authenticated CLI comparison harness |
@@ -165,4 +211,4 @@ Run the offline checks and report behavioral trials with their actual limits. Do
 
 ## License
 
-[MIT](LICENSE), copyright 2026 Shah Habibul Imran. Inspired by [Ponytail](https://github.com/DietrichGebert/ponytail/tree/main/skills). Branding and quotation provenance still need review; see the [release audit](RELEASE_AUDIT.md). No affiliation or endorsement is claimed.
+[MIT](LICENSE), copyright 2026 Shah Habibul Imran. Inspired by [Ponytail](https://github.com/DietrichGebert/ponytail/tree/main/skills). Branding and quotation provenance still need review; see the [release limitations](RELEASE_NOTES.md#validation-and-limitations). No affiliation or endorsement is claimed.

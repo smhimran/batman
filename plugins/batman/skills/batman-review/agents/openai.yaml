@@ -1,0 +1,4 @@
+interface:
+  display_name: "Batman Review"
+  short_description: "Find concrete bugs and broken callers"
+  default_prompt: "Use $batman-review to review this change."

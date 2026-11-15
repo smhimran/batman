@@ -2,10 +2,9 @@ __pycache__/
 *.pyc
 .promptfoo/
 evals/results/
-.agents/skills/batman/
-.agents/skills/batman-*/
-.claude/skills/batman/
-.claude/skills/batman-*/
+# Project-local installed copies; canonical skills/ and plugins/ stay tracked.
+/.*/skills/batman/
+/.*/skills/batman-*/
 
 # macOS metadata
 .DS_Store

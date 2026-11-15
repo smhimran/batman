@@ -1,0 +1,20 @@
+{
+  "name": "batman",
+  "interface": {
+    "displayName": "Batman"
+  },
+  "plugins": [
+    {
+      "name": "batman",
+      "source": {
+        "source": "local",
+        "path": "./plugins/batman"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

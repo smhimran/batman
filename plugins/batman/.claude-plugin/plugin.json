@@ -1,0 +1,11 @@
+{
+  "name": "batman",
+  "version": "0.1.0-beta",
+  "description": "Evidence-driven engineering: investigate, design, challenge, review, and execute.",
+  "author": {
+    "name": "Shah Habibul Imran"
+  },
+  "homepage": "https://github.com/smhimran/batman",
+  "repository": "https://github.com/smhimran/batman",
+  "license": "MIT"
+}

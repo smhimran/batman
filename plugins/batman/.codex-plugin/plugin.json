@@ -1,0 +1,24 @@
+{
+  "name": "batman",
+  "version": "0.1.0-beta",
+  "description": "Evidence-driven engineering: investigate, design, challenge, review, and execute.",
+  "author": {
+    "name": "Shah Habibul Imran"
+  },
+  "homepage": "https://github.com/smhimran/batman",
+  "repository": "https://github.com/smhimran/batman",
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Batman",
+    "shortDescription": "Question assumptions and verify engineering outcomes",
+    "developerName": "Shah Habibul Imran",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Instructions"
+    ],
+    "defaultPrompt": [
+      "Use Batman to review this change against its requirements."
+    ]
+  }
+}

@@ -78,3 +78,30 @@ Scratch evidence for this preparation is retained locally under the `batman-beta
 ## Earlier observations
 
 On 31 October, Claude Code 2.1.114 loaded one legacy project skill versus zero in a control and rejected `/batman` only in the control, but model execution was blocked by authentication/config access. Codex's old launcher failed to locate its native binary and the app-bundled executable was denied. Those observations are historical; they do not describe the current Codex installation or the current six-package layout. The old `references/` packaging description is superseded by the sibling skill layout above.
+
+
+## Marketplace and cross-agent follow-up — 15 November 2026
+
+The [installation guide](../INSTALL.md) now separates model-independent instructions from agent-specific discovery. The project installer accepts Codex, Claude, Cursor, Copilot, Gemini CLI, OpenCode, Cline, Roo Code, Kiro, Kimi Code, Pi, Google Antigravity, Windsurf compatibility, and Devin. It also accepts the generic `agents` layout. Official layout references and invocation guidance are linked in that guide. No extra models or provider APIs are bundled.
+
+Offline checks exercise every host mapping, repeat installation, resolve selector links, preserve conflicts, and preflight the complete `all` selection. `both` remains Codex plus Claude; `all` deduplicates shared roots. These checks establish file layout, not runtime support. Apart from Codex and Claude below, none of the added host/model combinations was exercised in a native session. Their runtime status remains unverified.
+
+### Clean plugin payload
+
+Both catalogs point at `plugins/batman`, generated from canonical `skills/` using `python3 scripts/build_plugin.py`. Each host's installed payload contained exactly the same 21 expected files: six instruction/metadata/license packages, a root MIT notice, and two host manifests. Byte comparisons passed for both installed caches. No benchmark, grader, test, script, branding image, or quotation file was included. The offline package test checks freshness, catalog resolution, exact payload contents, and selector references.
+
+### Codex plugin
+
+Using Codex CLI 0.166.0 with an isolated `CODEX_HOME`, local marketplace registration, `codex plugin add batman@batman`, and `codex plugin list --marketplace batman --json` all exited 0. The plugin reported version `0.1.0-beta`, installed and enabled. Native `skills/list` returned all six namespaced skills (`batman:batman`, `batman:batman-review`, etc.), each enabled with `pluginId: batman@batman` and its path in the isolated cache. No loader errors were reported.
+
+One model smoke check explicitly invoked `$batman:batman` against the small archived-group fixture, now with `group["archived"]` specified as the flag. The requested model was `gpt-6-sol`, medium reasoning, Quick skill depth. It completed with exit 0, loaded `batman-review/SKILL.md` from the installed cache, reproduced the unguarded addition with `python3`, and reported the repair. The selector can be host-injected rather than appearing as a separate shell read; the observed focused-skill read and native inventory establish the cache source. The fixture's source and requirement remained unchanged. This is one plugin route check, not a new benchmark of all six skills or all models.
+
+The isolated Codex model check used the existing login via a temporary local auth-file symlink; no credential bytes were included in logs or repository files. No normal user plugin configuration was modified.
+
+### Claude plugin
+
+Claude Code 2.1.114 validated both the plugin and marketplace manifests with no warnings. With an isolated `CLAUDE_CONFIG_DIR`, local catalog registration, plugin installation, and plugin listing all exited 0. The plugin was installed and enabled as `batman@batman`, version `0.1.0-beta`. Its cache bytes matched the clean payload.
+
+An invocation of `/batman:batman` recognized the plugin. The debug log reported `Loaded 6 skills from plugin batman default directory`. For this local development marketplace, the loader read the generated source directory in the checkout, rather than demonstrating a remote Git cache loading path. The invocation returned `Not logged in` with zero model tokens, zero API duration, and `is_error: true` (despite the JSON subtype `success`). Authenticated execution remains unverified; no successful Claude model turn is claimed.
+
+The tests in this section used local catalogs; they do not by themselves establish GitHub-fetched installation. Test the remote commands in a fresh configuration after pushing catalog changes. No release tag, GitHub Release, or official-directory submission is implied by a repository marketplace.

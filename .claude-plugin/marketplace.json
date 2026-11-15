@@ -1,0 +1,16 @@
+{
+  "name": "batman",
+  "owner": {
+    "name": "Shah Habibul Imran"
+  },
+  "plugins": [
+    {
+      "name": "batman",
+      "source": "./plugins/batman",
+      "description": "Evidence-driven software engineering skills"
+    }
+  ],
+  "metadata": {
+    "description": "Batman evidence-driven software engineering skills"
+  }
+}
